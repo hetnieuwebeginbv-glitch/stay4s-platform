@@ -1,0 +1,22 @@
+# Cloudflare Workers AI - Stay4S Reference
+
+## Modellen
+- Chat/NL: @cf/meta/llama-3.3-70b-instruct-fp8-fast (beste kwaliteit)
+- Chat/multimodaal: @cf/meta/llama-4-scout-17b-16e-instruct
+- Reasoning: @cf/moonshotai/kimi-k2.6 (262k context)
+- Vertaling: @cf/meta/m2m100-1.2b (100+ talen incl NL)
+- Safety: @cf/meta/llama-guard-3-8b
+
+## API Endpoint
+POST https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/{MODEL_ID}
+
+## Pricing
+- .011 per 1000 Neurons
+- 10.000 Neurons per dag gratis
+- Workers Paid plan: /maand
+
+## Zone ID
+76b0029f5744d8b62e892ebcdcb40431
+
+## Tunnel ID
+1eeda8d8-d3e8-4f58-b25f-c9853b509dda

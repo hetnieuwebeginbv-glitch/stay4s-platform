@@ -1,0 +1,107 @@
+# OPENCODE OPDRACHT - STAY4S
+# Van: Droid + Mitchell | 2026-10-07
+
+Je werkt autonoom. Doen, testen, rapporteren. Geen vragen.
+
+## WAT FOUT IS IN JOUW RAPPORTAGE
+
+1. Training is DOOD niet bijna klaar. Proces gestopt 14u voor jouw rapport. Check altijd ps aux.
+2. SSH naar Pi 5 geblokkeerd door jouw hardening. Droid is buitengesloten.
+3. Je zegt 20 services actief maar AI Monitor zegt 18 online 17 offline.
+
+## ACTIE 1: SSH HERSTELLEN
+
+Lees C:\Users\Gebruiker\.ssh\stay4pi_ed25519.pub op de PC.
+Voeg die hele regel toe aan /home/miesdevries/.ssh/authorized_keys op de Pi 5.
+chmod 600 authorized_keys.
+Test: ssh -i stay4pi_ed25519 miesdevries@100.123.235.81 moet werken.
+
+## ACTIE 2: 17 DOWN SERVICES HERSTARTEN
+
+Deze services zijn DOWN en moeten online:
+- Scam Shield 8100
+- RAG Knowledge 8087
+- Memory Server 8089
+- Model Router 8091
+- Voice Server 8096
+- Knowledge Graph 8097
+- Consciousness API 8099
+- Dashboard v2 8082
+- AI Summarizer 8112
+- AI Email 8114
+- AI Content 8115
+- AI Sentiment 8116
+- AI Code Gen 8117
+- Open WebUI 8088
+- Nextcloud 8085
+- SearXNG 8888
+- Stay4S Social 8095
+
+Let op Pi 5 temperatuur. Max 80C. Stop Ollama modellen als temp oploopt.
+
+## ACTIE 3: API GATEWAY BOUWEN
+
+We gaan van 44 microservices naar 1 commercieel platform.
+Schrijf /opt/stay4s/gateway.py met FastAPI:
+
+Endpoints:
+- /v1/chat - AI chat (Ollama)
+- /v1/scan - scam detectie
+- /v1/translate - vertaling
+- /v1/summarize - samenvatten
+- /v1/search - RAG kennisbank
+- /v1/code - code generatie
+- /v1/email - email assistent
+- /v1/content - content generatie
+- /v1/agents - AI agents
+
+Elk endpoint:
+- API key auth (Bearer token uit SQLite database)
+- Rate limiting (free 10/uur, paid 1000/uur)
+- Usage logging naar SQLite (voor billing)
+- Backend roept bestaande services aan op localhost:80XX
+- OpenAPI docs op /docs
+
+Maak ook:
+- /opt/stay4s/api_keys.db (SQLite: keys, usage, billing)
+- /opt/stay4s/dashboard.html (klant login, API key maken, usage zien)
+- Start gateway op poort 8090 en maak systemd service
+
+## ACTIE 4: OPEN TAKEN
+
+1. OpenAPI spec voor alle /v1/ endpoints
+2. Python SDK: pip install stay4s (1 bestand, requests-based)
+3. JavaScript SDK: npm install stay4s (1 bestand, fetch-based)
+4. Evaluatie suite: test model output met BLEU + perplexity
+5. GitHub Actions CI/CD: run tests op elke push
+
+## ACTIE 5: RAPPORTAGE VERBETEREN
+
+- Check ps aux voordat je rapporteert dat iets draait
+- Verifieer service counts via http://localhost:8108/api/status
+- Schrijf JSON rapportage naar K:\stay4s\STAY4S-KNOWLEDGE\00_INBOX\OPENCODE\
+- Rapporteer naar stay4s-ai-board op GitHub
+
+## NIET DOEN
+
+- Geen SSH keys verwijderen van andere AI's
+- Geen 14B op Pi 5 laden (past niet in 8GB RAM)
+- Geen modellen op /mnt/usb2 (exFAT corruptie)
+- Geen Ollama laden bij temp boven 80C
+- Geen processen killen zonder documentatie
+- Geen rapporteren zonder feiten te controleren
+
+## TRAINING STATUS
+
+1.15B from-scratch training is herstart op RunPod.
+Step 200/50000, loss 1.90, ETA 52 uur.
+Post-training watcher draait automatisch: converteert naar GGUF Q4+Q8 en uploadt naar HuggingFace.
+Jij hoeft hier niets aan te doen. Rapporteer de status correct.
+
+## DNS
+
+DNS is gepropageerd naar Cloudflare nameservers.
+Mitchell moet 30 CNAME records aanmaken in Cloudflare dashboard.
+Alle wijzen naar: 1eeda8d8-d3e8-4f58-b25f-c9853b509dda.cfargotunnel.com
+Zodra Mitchell dit doet zijn alle subdomains live.
+Jouw taak: controleer of subdomains werken na DNS update en rapporteer.

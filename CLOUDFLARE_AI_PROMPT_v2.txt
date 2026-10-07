@@ -1,0 +1,13 @@
+Hallo, ik ben Mitchell de Vries van Het Nieuwe Begin B.V. Ik heb al een Cloudflare account met domein stay4s.com. Mijn nameservers staan al op Cloudflare (kenneth en rihana.ns.cloudflare.com). Ik heb een Cloudflare Tunnel actief met ID 1eeda8d8-d3e8-4f58-b25f-c9853b509dda die draait op mijn Raspberry Pi 5.
+
+Ik heb 4 doelen:
+
+DOEL 1: Ik heb 30 subdomains die via mijn tunnel moeten bereikbaar zijn maar de DNS CNAME records ontbreken nog. Kun jij mij helpen deze aan te maken? Elke subdomain moet een CNAME record krijgen dat wijst naar 1eeda8d8-d3e8-4f58-b25f-c9853b509dda.cfargotunnel.com. De subdomains zijn: www api safe compa vault chat social bot agent browser admin cloud dash whatsapp search schedule notify monitor data review translate summary find email content feeling code api-dir. Kun jij deze records toevoegen of mij stap voor stap laten zien hoe ik dat doe?
+
+DOEL 2: Ik wil Cloudflare Workers AI gebruiken als fallback voor mijn eigen lokale AI modellen op de Raspberry Pi. Welke modellen hebben jullie die goed werken in het Nederlands voor chat, text classificatie, samenvatten en vertaling? Geef mij de API endpoints en voorbeeld requests.
+
+DOEL 3: Ik wil een Cloudflare Worker maken als API gateway. De Worker moet requests op api.stay4s.com/v1/ ontvangen, een API key controleren, rate limiting doen, en dan forwarden naar mijn tunnel backend op de Pi 5. Kun je mij een Worker script schrijven dat dit doet? En hoe log ik usage naar D1 of KV?
+
+DOEL 4: Wat kost Workers AI per 1000 requests? En kan ik een custom system prompt in het Nederlands gebruiken?
+
+Mijn backend op de Pi 5 draait FastAPI services op poorten 8070 tot 8120. De tunnel config wijst elke subdomain naar de juiste poort.

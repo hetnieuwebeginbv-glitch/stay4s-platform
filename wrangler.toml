@@ -1,0 +1,24 @@
+name = "stay4s-api-gateway"
+main = "src/index.js"
+compatibility_date = "2026-10-07"
+
+# KV namespace for API keys
+[[kv_namespaces]]
+binding = "API_KEYS"
+id = "CREATE_KV_FIRST"
+
+# KV namespace for rate limiting
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "CREATE_KV_FIRST"
+
+# D1 database for usage logging
+[[d1_databases]]
+binding = "USAGE_LOG"
+database_name = "stay4s-usage"
+database_id = "CREATE_D1_FIRST"
+
+# Route: api.stay4s.com/v1/* -> this worker
+[[routes]]
+pattern = "api.stay4s.com/v1/*"
+zone_name = "stay4s.com"
