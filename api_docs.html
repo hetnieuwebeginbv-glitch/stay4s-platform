@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="nl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stay4S API Documentation</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+body{background:#0a0e27;color:#e0e0e0;line-height:1.6}
+.nav{position:fixed;top:0;left:0;width:250px;height:100vh;background:#0d1129;padding:20px;overflow-y:auto;border-right:1px solid #1a2050}
+.nav h2{color:#667eea;font-size:18px;margin-bottom:20px}
+.nav a{display:block;padding:8px 12px;color:#8892b0;text-decoration:none;border-radius:6px;font-size:14px}
+.nav a:hover{background:#151a3a;color:#fff}
+.main{margin-left:270px;padding:30px;max-width:900px}
+h1{color:#fff;font-size:32px;margin-bottom:10px}
+h2{color:#667eea;font-size:24px;margin:30px 0 15px;border-bottom:1px solid #1a2050;padding-bottom:5px}
+h3{color:#ccd6f6;font-size:18px;margin:20px 0 10px}
+.endpoint{background:#0d1129;padding:20px;border-radius:10px;margin:15px 0;border:1px solid #1a2050}
+.method{display:inline-block;padding:3px 12px;border-radius:4px;font-weight:bold;font-size:12px;margin-right:10px}
+.POST{background:#49b675;color:#fff}.GET{background:#3898d9;color:#fff}
+.path{font-family:monospace;font-size:16px;color:#fff}
+.desc{color:#8892b0;margin:10px 0}
+.price{display:inline-block;background:#1a2050;padding:3px 10px;border-radius:4px;color:#ffd700;font-size:13px;margin-left:10px}
+.tier-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;background:#2a3050;color:#a0b4d0}
+code{background:#0a0e27;padding:2px 6px;border-radius:3px;font-family:'Courier New',monospace;color:#49b675}
+pre{background:#0a0e27;padding:15px;border-radius:8px;overflow-x:auto;border:1px solid #1a2050;margin:10px 0}
+pre code{background:none;padding:0;color:#e0e0e0}
+.hero{background:linear-gradient(135deg,#667eea,#764ba2);padding:40px;border-radius:15px;margin-bottom:30px}
+.hero h1{color:#fff;margin:0}.hero p{color:rgba(255,255,255,0.8);font-size:16px;margin-top:10px}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin:20px 0}
+.pricing-card{background:#0d1129;padding:25px;border-radius:12px;text-align:center;border:1px solid #1a2050}
+.pricing-card.featured{border-color:#667eea;box-shadow:0 0 20px rgba(102,126,234,0.2)}
+.pricing-card h3{color:#667eea}.pricing-card .price{font-size:36px;font-weight:bold;color:#fff;margin:10px 0}
+.pricing-card ul{list-style:none;text-align:left;margin:15px 0}.pricing-card li{padding:5px 0;color:#8892b0}
+.btn{display:inline-block;padding:10px 30px;background:#667eea;color:#fff;text-decoration:none;border-radius:8px;margin-top:15px}
+</style></head><body>
+<div class="nav">
+<h2>Stay4S API</h2>
+<a href="#intro">Introductie</a>
+<a href="#auth">Authenticatie</a>
+<a href="#pricing">Prijzen</a>
+<a href="#chat">POST /v1/chat</a>
+<a href="#scan">POST /v1/scan</a>
+<a href="#scan-batch">POST /v1/scan/batch</a>
+<a href="#translate">POST /v1/translate</a>
+<a href="#summarize">POST /v1/summarize</a>
+<a href="#search">POST /v1/search</a>
+<a href="#code">POST /v1/code</a>
+<a href="#email">POST /v1/email</a>
+<a href="#content">POST /v1/content</a>
+<a href="#agents">POST /v1/agents</a>
+<a href="#train">POST /v1/train</a>
+<a href="#whatsapp">POST /v1/whatsapp</a>
+<a href="#rom">POST /v1/rom</a>
+<a href="#customers">POST /customers/create</a>
+<a href="#payments">POST /payments/create</a>
+</div>
+<div class="main">
+<div class="hero">
+<h1>Stay4S API Documentatie</h1>
+<p>Soevereine Nederlandse AI API - 13 endpoints, Cloudflare Llama 3.3 70B, AVG-conform, geen Big Tech afhankelijkheid</p>
+</div>
+
+<h2 id="intro">Introductie</h2>
+<p>De Stay4S API biedt Nederlandstalige AI diensten via een eenvoudige REST API. Alle verwerking gebeurt via Cloudflare Workers AI (Llama 3.3 70B) met fallback naar lokale Ollama modellen op Raspberry Pi 5.</p>
+<p>Base URL: <code>https://api.stay4s.com</code></p>
+
+<h2 id="auth">Authenticatie</h2>
+<p>Alle endpoints (behalve /docs en /pricing) vereisen een API key via Bearer token:</p>
+<pre><code>Authorization: Bearer stay4s-free-demo</code></pre>
+<p>Vraag een API key aan via <code>POST /customers/create</code>.</p>
+
+<h2 id="pricing">Prijzen</h2>
+<div class="pricing-grid">
+<div class="pricing-card"><h3>Free</h3><div class="price">&euro; 0</div><p>per maand</p><ul><li>10 calls/uur</li><li>1.000 calls/maand</li><li>Chat + Translate</li><li>Community support</li></ul></div>
+<div class="pricing-card featured"><h3>Pro</h3><div class="price">&euro; 49</div><p>per maand</p><ul><li>1.000 calls/uur</li><li>50.000 calls/maand</li><li>Alle 8 basis endpoints</li><li>WhatsApp AI setup</li><li>Email support</li></ul><a class="btn" href="#">Start Pro</a></div>
+<div class="pricing-card"><h3>Enterprise</h3><div class="price">&euro; 499</div><p>per maand</p><ul><li>10.000 calls/uur</li><li>500.000 calls/maand</li><li>Alle 13 endpoints</li><li>AI Agents + Training</li><li>Custom ROM builds</li><li>Priority support</li></ul><a class="btn" href="#">Contact Sales</a></div>
+</div>
+
+<h2 id="chat">Chat API</h2>
+<div class="endpoint"><span class="method POST">POST</span><span class="path">/v1/chat</span><span class="price">&euro; 0.001/call</span><span class="tier-badge">free+</span>
+<div class="desc">Nederlandstalige AI chat. Gebruikt Cloudflare Llama 3.3 70B voor optimale kwaliteit.</div>
+<h3>Request</h3>
+<pre><code>POST /v1/chat
+Authorization: Bearer stay4s-free-demo
+Content-Type: application/json
+
+{"prompt": "Wat is de hoofdstad van Nederland?"}</code></pre>
+<h3>Response</h3>
+<pre><code>{"endpoint": "chat", "response": "De hoofdstad van Nederland is Amsterdam.", "tier": "free"}</code></pre>
+</div>
+
+<h2 id="scan">Scam Detection</h2>
+<div class="endpoint"><span class="method POST">POST</span><span class="path">/v1/scan</span><span class="price">&euro; 0.01/scan</span><span class="tier-badge">pro+</span>
+<div class="desc">AI-aangedreven scam detectie. Analyseert berichten op phishing, oplichting, en andere scam patronen.</div>
+<pre><code>POST /v1/scan
+Authorization: Bearer stay4s-pro-demo
+Content-Type: application/json
+
+{"message": "U heeft een prijs gewonnen! Klik hier om op te halen..."}</code></pre>
+</div>
+
+<h2 id="scan-batch">Bulk Scam Detection</h2>
+<div class="endpoint"><span class="method POST">POST</span><span class="path">/v1/scan/batch</span><span class="price">&euro; 0.005/scan</span><span class="tier-badge">pro+</span>
+<div class="desc">Bulk scam detectie voor maximaal 1000 berichten per aanvraag. Ideaal voor email filtering.</div>
+<pre><code>POST /v1/scan/batch
+Authorization: Bearer stay4s-pro-demo
+Content-Type: application/json
+
+{"messages": ["bericht 1", "bericht 2", "bericht 3"]}</code></pre>
+</div>
+
+<h2 id="translate">Translation</h2>
+<div class="endpoint"><span class="method POST">POST</span><span class="path">/v1/translate</span><span class="price">&euro; 0.005/call</span><span class="tier-badge">free+</span>
+<div class="desc">Vertaal tekst tussen talen. Ondersteunt Nederlands, Engels, Duits, en meer via m2m100.</div>
+<pre><code>POST /v1/translate
+Authorization: Bearer stay4s-free-demo
+Content-Type: application/json
+
+{"text": "Hallo wereld", "target": "en"}</code></pre>
+</div>
+
+<h2 id="summarize">Summarize</h2>
+<div class="endpoint"><span class="method POST">POST</span><span class="path">/v1/summarize</span><span class="price">&euro; 0.005/call</span><span class="tier-badge">pro+</span>
+<div class="desc">Vat lange tekst samen in maximaal 3 zinnen.</div>
+</div>
+
+<h2 id="search">AI Search</h2>
+<div class="endpoint"><span class="method POST">POST</span><span class="path">/v1/search</span><span class="price">&euro; 0.01/call</span><span class="tier-badge">pro+</span>
+<div class="desc">AI-aangedragen zoekantwoorden in het Nederlands.</div>
+</div>
+
+<h2 id="code">Code Generation</h2>
+<div class="endpoint"><span class="method POST">POST</span><span class="path">/v1/code</span><span class="price">&euro; 0.02/call</span><span class="tier-badge">pro+</span>
+<div class="desc">Genereer code in Python, JavaScript, Kotlin, Bash, en meer.</div>
+<pre><code>POST /v1/code
+Authorization: Bearer stay4s-pro-demo
+Content-Type: application/json
+
+{"language": "python", "description": "Web scraper for prices"}</code></pre>
+</div>
+
+<h2 id="email">Email Generation</h2>
+<div class="endpoint"><span class="method POST">POST</span><span class="path">/v1/email</span><span class="price">&euro; 0.01/call</span><span class="tier-badge">pro+</span>
+<div class="desc">Genereer professionele Nederlandse emails.</div>
+</div>
+
+<h2 id="content">Content Generation</h2>
+<div class="endpoint"><span class="method POST">POST</span><span class="path">/v1/content</span><span class="price">&euro; 0.02/call</span><span class="tier-badge">pro+</span>
+<div class="desc">Genereer marketing content, blog posts, nieuwsbrieven in het Nederlands.</div>
+</div>
+
+<h2 id="agents">AI Agents <span style="color:#ffd700">NIEUW</span></h2>
+<div class="endpoint"><span class="method POST">POST</span><span class="path">/v1/agents</span><span class="price">&euro; 0.05/task</span><span class="tier-badge">enterprise</span>
+<div class="desc">AI agent voert complexe taken uit: plant, selecteert tools, voert stappen uit. Voor RPA en automatisering.</div>
+<pre><code>POST /v1/agents
+Authorization: Bearer YOUR_API_KEY_HERE-demo
+Content-Type: application/json
+
+{"task": "Zoek alle concurrenten in Amsterdam en vergelijk prijzen"}</code></pre>
+</div>
+
+<h2 id="train">Custom Model Training</h2>
+<div class="endpoint"><span class="method POST">POST</span><span class="path">/v1/train</span><span class="price">&euro; 999+</span><span class="tier-badge">enterprise</span>
+<div class="desc">Krijg een offerte voor custom AI model training. We trainen, converteren naar GGUF, en deployen op uw infrastructuur.</div>
+</div>
+
+<h2 id="whatsapp">WhatsApp AI Setup</h2>
+<div class="endpoint"><span class="method POST">POST</span><span class="path">/v1/whatsapp</span><span class="price">&euro; 99/maand</span><span class="tier-badge">pro+</span>
+<div class="desc">Setup van WhatsApp AI klantenservice. Inclusief welkomstbericht, FAQ antwoorden, en doorverwijzingsregels.</div>
+</div>
+
+<h2 id="rom">Custom ROM Build</h2>
+<div class="endpoint"><span class="method POST">POST</span><span class="path">/v1/rom</span><span class="price">&euro; 499/build</span><span class="tier-badge">enterprise</span>
+<div class="desc">Custom Android ROM build voor uw apparaten. Degoogleized, Nederlandstalig, met Stay4S apps.</div>
+</div>
+
+<h2 id="customers">Klant Aanmaken</h2>
+<div class="endpoint"><span class="method POST">POST</span><span class="path">/customers/create</span><span class="tier-badge">free</span>
+<div class="desc">Maak een nieuw klantaccount aan en ontvang een API key.</div>
+<pre><code>POST /customers/create
+Content-Type: application/json
+
+{"email": "info@mijnbedrijf.nl", "name": "Jan Jansen", "company": "Jansen BV", "tier": "pro"}</code></pre>
+<h3>Response</h3>
+<pre><code>{"customer_id": 1, "api_key": "YOUR_API_KEY_HERE", "tier": "pro", "monthly_price": 49}</code></pre>
+</div>
+
+<h2 id="payments">Betaling Aanmaken</h2>
+<div class="endpoint"><span class="method POST">POST</span><span class="path">/payments/create</span><span class="tier-badge">authenticated</span>
+<div class="desc">Start een Mollie betaling voor uw abonnement.</div>
+<pre><code>POST /payments/create
+Content-Type: application/json
+
+{"api_key": "stay4s-pro-demo"}</code></pre>
+</div>
+
+<h2>SDK's</h2>
+<p>Beschikbare SDK's voor eenvoudige integratie:</p>
+<ul>
+<li><strong>Python</strong>: <code>stay4s.py</code> - 9 endpoints, requests-based</li>
+<li><strong>JavaScript</strong>: <code>stay4s.js</code> - 9 endpoints, fetch-based</li>
+<li><strong>Kotlin</strong>: <code>Stay4S.kt</code> - 9 endpoints, OkHttp-based (Android)</li>
+</ul>
+<p>Alle SDK's zijn beschikbaar op <a href="https://github.com/hetnieuwebeginbv-glitch/YOUR_API_KEY_HERE" style="color:#667eea">GitHub</a>.</p>
+
+<h2>Support</h2>
+<p>Email: <a href="mailto:info@stay4s.com" style="color:#667eea">info@stay4s.com</a> | WhatsApp: +31 6 20 74 90 68 | Docs: <a href="https://docs.stay4s.com" style="color:#667eea">docs.stay4s.com</a></p>
+<p>&copy; 2026 Stay4S - Het Nieuwe Begin BV</p>
+</div></body></html>
