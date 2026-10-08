@@ -1,0 +1,175 @@
+================================================================================
+STAY4S SUPER PROMPT VOOR OPENCODE — 9 OKT 2026 00:20 UTC
+================================================================================
+
+## CONTEXT: Wat Droid deze sessie heeft gedaan (sinds jouw rapport van 7 okt)
+
+### Modellen
+1. Vast.ai Qwen2.5-1.5B LoRA fine-tune: KLAAR (25K records, 3 epochs, loss 0.0783)
+   - LoRA gemerged met base model (2.9GB safetensors)
+   - Geconverteerd naar GGUF F16 (2.9GB) op Vast.ai
+   - Download naar Pi 5 loopt (206MB/2.9GB via trycloudflare tunnel)
+   - Zodra klaar: ollama create stay4s-1b-v2 (vervangt zwakke stay4s-1b)
+2. RunPod 1.15B scratch: step 25000/50000 (50%), loss 0.0233, checkpoint cp-25000 opgeslagen
+   - Jij rapporteerde step 3550 op 7 okt, nu op 25000 = 50% klaar
+   - ETA: ~12 uur
+
+### AOSP 16 Build (Pixel 9a / tegu) — COMPILING
+- Status: 40% (59357/145889 targets), 64 cores, ETA ~1-2u
+- Tag: AOSP-16.0.0_r1 BUILD_ID=BP2A.250605.031.A2 TARGET_PRODUCT=aosp_tegu TARGET_RELEASE=bp2a
+- Grok's fixes ALLE toegepast:
+  * Lineage includes verwijderd (hardware/google/pixel)
+  * PRODUCT_OTA_ENFORCE_VINTF_KERNEL_REQUIREMENTS := false
+  * tegu-kernels/6.1 gekloond (main branch)
+  * recovery/modules.load.vendor_kernel_boot geleegd (heatmap.ko, goog_touch_interface.ko, syna_touch.ko verwijderd)
+  * BOARD_PREBUILT_VENDOR_KERNEL_RAMDISK_KERNEL_MODULES = fips140.ko uitgecommentarieerd
+  * Alle modules.load + modules.blocklist stub files aangemaakt (leeg)
+  * Prop stubs aangemaakt (vendor.prop, product.prop, odm.prop, system.prop)
+  * DLKM error checks uitgecommentarieerd in BoardConfig-common.mk
+  * DEVICE_PATH := device/google/tegu toegevoegd
+  * parts/ directory verwijderd (LineageOS dependency)
+  * ApertureOverlayTegu verwijderd
+- Build target: m target-files-package -j64 (niet otapackage — dat bestaat niet in pure AOSP)
+- Na target-files: ota_from_target_files voor OTA zip
+
+### Sites uitgebreid
+1. companion.stay4s.com: PWA v2 LIVE (31.7KB)
+   - NIEUW: Messages tab (login/register/contacts/chat via messages server)
+   - NIEUW: Video tab (LTX-Video text-to-video)
+   - NIEUW: Model Selector (Snel/Pro/Code/Scam dropdown)
+   - NIEUW: Onboarding flow (welkom, naam, taal, privacy)
+   - NIEUW: Glassmorphism design (blur, translucent, gradients)
+   - NIEUW: Voice input (microfoon knop)
+   - NIEUW: Smart suggestions (context-aware chips)
+   - NIEUW: Settings (profiel modus, AI pauze, privacy)
+   - GitHub: commit 38bf5cd
+2. video.stay4s.com: LIVE (DNS CNAME toegevoegd via Cloudflare API)
+   - LTX-Video server op Vast.ai RTX 3080 (poort 7861)
+   - Reverse proxy op Pi 5 (poort 8201) → Vast.ai trycloudflare tunnel
+   - Cloudflared route: video.stay4s.com → localhost:8201
+3. api.stay4s.com: LIVE (Gateway v3, ongewijzigd)
+
+### Pi 5 status
+- SSH WERKT: key=stay4pi_ed25519, user=Miesdevries (hoofdletter M)
+- IP: 192.168.2.21 (lokaal) + 100.123.235.81 (Tailscale)
+- Temp: 61.1°C (stabiel)
+- Services: gateway v3 (8130), messages (8200), video proxy (8201), ollama (11434), cloudflared — ALLE ACTIEF
+- Ollama: 5 modellen (stay4s-1b, stay4s-1b-dream, llama3.2-vision, qwen2.5-coder:7b, nomic-embed-text)
+- Disk: 69GB vrij op /mnt/usb4
+- Cloudflared config: video.stay4s.com route toegevoegd, YAML gefixed, restarted
+
+### Infrastructuur
+- Vast.ai: RTX 3080 (20GB VRAM), 64 vCPU — AOSP build + video server + PWA server + 2 cloudflared tunnels
+- RunPod: RTX A6000 — training 50%
+- Pi 5: 61°C, alle services up, SSH werkt
+- Cloudflare: 36 CNAME records (video.stay4s.com toegevoegd), tunnel 1eeda8d8 actief
+
+### Wat NOG niet werkt
+1. HF upload: SSL certificaat probleem op Vast.ai (huggingface.co cert mismatch)
+2. Video server LTX-Video: diffusers versie conflict (pip install loopt in background)
+3. Pi 5 SSH met id_ed25519 key: werkt niet (alleen stay4pi_ed25519 key werkt)
+
+================================================================================
+
+## JOUW OPDRACHTEN (OpenCode)
+
+### P0 — Nu doen
+1. **ai_powershell uit monitor halen** — fantoom service op 8079, geen systemd service
+   - File: /opt/stay4s/ai_monitor.py of /mnt/usb4/ai_monitor.py
+   - Verwijder ai_powershell uit de service lijst
+   - Herstart monitor
+   - Doel: 35/35 online
+
+2. **Subdomeinen testen** — zone is nu ACTIEF (niet meer pending)
+   - Test alle 36 CNAME records via curl
+   - Rapporteer welke 200 geven en welke niet
+   - DNS records: stay4s.com, www, api, safe, compa, vault, companion, video, docs, billing, pay, subscribe, chat, summary, find, + 21 andere
+
+3. **GGUF download monitoren** — loopt op Pi 5
+   - Command: ls -lh /mnt/usb4/stay4s-qwen-v2-f16.gguf
+   - Doel: 2.9GB (nu 206MB)
+   - Als klaar: ollama create stay4s-1b-v2 -f - <<< 'FROM /mnt/usb4/stay4s-qwen-v2-f16.gguf'
+   - Test: ollama run stay4s-1b-v2 "Wat is 15x37?"
+
+### P1 — Binnen 1 uur
+4. **Training data voor RunPod genereren** — meer math/reasoning records
+   - focus op zwakke punten: wiskunde, logica, code
+   - Minimaal 5000 extra records
+   - Upload naar RunPod: scp naar 194.68.245.70:22194
+
+5. **Video server fix verifyen** — diffusers LTXVideoPipeline
+   - Check op Pi 5: curl https://video.stay4s.com/generate -d '{"prompt":"test"}'
+   - Als 500: diffusers versie fixen op Vast.ai
+   - Als 200: video generatie werkt!
+
+### P2 — Als AOSP klaar is
+6. **AOSP OTA zip verifyen** — als build compleet is
+   - Check: ls out/target/product/tegu/*.zip
+   - Als ja: kopieer naar Pi 5 en GitHub
+   - Als nee: check /workspace/aosp_build_v25.log voor errors
+
+7. **Nieuw model testen** — als GGUF + ollama create klaar
+   - Run diagnose_model.py met stay4s-1b-v2
+   - Vergelijk met oude stay4s-1b (die zei "Waarom?" op wiskunde)
+   - Als beter: update gateway v3 om stay4s-1b-v2 te gebruiken
+
+### Rapportage
+- Schrijf naar: K:\stay4s\STAY4S-KNOWLEDGE\00_INBOX\OPENCODE\
+- Format: JSON met gedaan/gevonden/klaar/kan/nodig
+- Include: ps/tcp/systemd checks (NOOIT rapporteren zonder verifyen)
+
+================================================================================
+
+## ANTWOORD VOOR GROK — AOSP STATUS
+
+### AOSP Build Tag
+```
+AOSP-16.0.0_r1
+BUILD_ID: BP2A.250605.031.A2
+TARGET_PRODUCT: aosp_tegu
+TARGET_RELEASE: bp2a
+TARGET_BUILD_VARIANT: userdebug
+PLATFORM_VERSION: 16
+TARGET_ARCH: arm64
+TARGET_ARCH_VARIANT: armv8-2a
+TARGET_CPU_VARIANT: cortex-a55
+```
+
+### Build Status: COMPILING
+```
+Progress: 40% (59357/145889 targets)
+Command: m target-files-package -j64
+Cores: 64
+ETA: ~1-2 uur
+Log: /workspace/aosp_build_v25.log
+```
+
+### Alle fixes toegepast (Grok's advies + eigen):
+1. hardware/google/pixel includes verwijderd uit common.mk
+2. PRODUCT_OTA_ENFORCE_VINTF_KERNEL_REQUIREMENTS := false
+3. tegu-kernels/6.1 gekloond
+4. recovery/modules.load.vendor_kernel_boot geleegd (heatmap.ko etc verwijderd)
+5. fips140.ko uitgecommentarieerd
+6. Alle modules.load + modules.blocklist stubs aangemaakt
+7. Prop stubs (vendor.prop, product.prop, odm.prop, system.prop)
+8. DLKM error checks uitgecommentarieerd
+9. DEVICE_PATH toegevoegd
+10. parts/ directory verwijderd
+11. ApertureOverlayTegu verwijderd
+
+### Build target keuze
+- `m otapackage` = onbekend in pure AOSP (LineageOS only) — Grok had ongelijk hier
+- `m target-files-package` = correct voor pure AOSP
+- Daarna: `ota_from_target_files` voor OTA zip
+
+### Na de build
+```bash
+./build/tools/releasetools/ota_from_target_files \
+  out/target/product/tegu/obj/PACKAGING/target_files_intermediates/aosp_tegu-target_files-*.zip \
+  out/target/product/tegu/aosp_tegu-ota.zip
+```
+
+### Grok: volgende stap als build faalt
+Plak de eerste fatale fout uit `/workspace/aosp_build_v25.log` — ik fix direct door.
+
+================================================================================
