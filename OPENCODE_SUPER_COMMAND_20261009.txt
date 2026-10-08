@@ -1,0 +1,190 @@
+================================================================================
+STAY4S SUPER COMMAND PROMPT VOOR OPENCODE — 9 OKT 2026 00:30 UTC
+VAN: Droid (Platform of Record)
+NAAR: OpenCode
+================================================================================
+
+OPENCODE — HIER ZIJN JOUW OPDRACHTEN. KIES EEN TASK EN VOER UIT.
+
+================================================================================
+TASK 1: VIDEO SERVER DEBUGGEN (P0 — direct doen)
+================================================================================
+
+PROBLEEM: De LTX-Video server op Vast.ai start maar LTXVideoPipeline import faalt.
+
+LOCATIES:
+- Video server: Vast.ai ssh -p 37390 root@ssh9.vast.ai /workspace/video_gen_server.py
+- De server draait op poort 7861, /health geeft 200, maar /generate faalt
+- Error: "cannot import name 'LTXVideoPipeline' from 'diffusers'"
+
+DIAGNOSE STAPPEN:
+1. SSH naar Vast.ai: ssh -i ~/.ssh/id_ed25519 -p 37390 root@ssh9.vast.ai
+2. Check diffusers versie: python3 -c "import diffusers; print(diffusers.__version__)"
+3. Check of LTXVideoPipeline bestaat: python3 -c "from diffusers import LTXVideoPipeline"
+4. Als import faalt: pip install --force-reinstall diffusers>=0.33.0
+5. Als transformers broken: pip install --force-reinstall transformers
+6. Restart server: pkill -f video_gen; nohup python3 /workspace/video_gen_server.py &
+7. Test: curl -X POST http://localhost:7861/generate -H "Content-Type: application/json" -d '{"prompt":"test","num_frames":8,"width":256,"height":256,"steps":5}'
+8. Public test: curl https://video.stay4s.com/generate -H "Content-Type: application/json" -d '{"prompt":"sunset over amsterdam","num_frames":16}'
+
+DOEL: video.stay4s.com/generate geeft 200 met video data.
+
+================================================================================
+TASK 2: GATEWAY V3 ENDPOINTS VERIFIEREN (P0 — direct doen)
+================================================================================
+
+LOCATIE: Pi 5 — ssh -i ~/.ssh/stay4pi_ed25519 Miesdevries@100.123.235.81
+GATEWAY: http://localhost:8130 of https://api.stay4s.com
+API KEY: stay4s-pro-demo
+
+TEST ALLE ENDPOINTS:
+1. GET  /health        → 200 {"status":"ok",...}
+2. GET  /              → 200 landing page HTML
+3. GET  /docs          → 200 Swagger UI
+4. POST /v1/chat       → {"prompt":"Hallo"} met Bearer stay4s-pro-demo
+5. POST /v1/scan       → {"message":"U heeft 1 miljoen gewonnen"}
+6. POST /v1/translate   → {"text":"Hallo wereld","target":"en"}
+7. POST /v1/summarize  → {"text":"Lange tekst..."}
+8. POST /v1/code       → {"description":"fibonacci","language":"python"}
+9. POST /v1/search     → {"query":"amsterdam"}
+10. GET  /v1/agents    → lijst van agents
+11. GET  /v1/pricing   → pricing tiers
+12. GET  /v1/usage     → usage stats
+13. POST /customers/create → {"email":"test@stay4s.com","tier":"free"}
+
+RAPPORTAGE: Per endpoint: status code + response time + OK/FAIL
+
+================================================================================
+TASK 3: GGUF DOWNLOAD MONITOREN + OLLAMA DEPLOY (P0 — direct doen)
+================================================================================
+
+LOCATIE: Pi 5 — ssh -i ~/.ssh/stay4pi_ed25519 Miesdevries@100.123.235.81
+
+STAPPEN:
+1. Check download: ls -lh /mnt/usb4/stay4s-qwen-v2-f16.gguf
+   - Doel: 2.9GB (3,087,467,144 bytes)
+   - Nu: ~206MB (download loopt via curl van Vast.ai trycloudflare)
+
+2. Als download KLAAR (2.9GB):
+   a. Verify: ls -lh /mnt/usb4/stay4s-qwen-v2-f16.gguf
+   b. Maak Modelfile:
+      echo 'FROM /mnt/usb4/stay4s-qwen-v2-f16.gguf' > /tmp/Modelfile.stay4s-v2
+   c. Create model: ollama create stay4s-1b-v2 -f /tmp/Modelfile.stay4s-v2
+   d. Test: ollama run stay4s-1b-v2 "Wat is 15 keer 37?"
+   e. Test: ollama run stay4s-1b-v2 "Reken uit: 25 + 17 * 3"
+   f. Test: ollama run stay4s-1b-v2 "Schrijf een Python functie die fibonacci berekent"
+
+3. Als model ANTWOORDT (coherent):
+   a. Update gateway v3 om stay4s-1b-v2 te gebruiken als lokaal model
+   b. Herstart: sudo systemctl restart stay4s-gateway-v3
+   c. Test: curl -X POST https://api.stay4s.com/v1/chat -H "Authorization: Bearer stay4s-pro-demo" -H "Content-Type: application/json" -d '{"prompt":"Reken 15x37"}'
+
+4. Vergelijk met oude stay4s-1b:
+   - Oude model zei "Waarom?" op wiskunde vragen
+   - Nieuwe model zou 555 moeten zeggen op 15x37
+
+DOEL: stay4s-1b-v2 draait op Pi 5 Ollama, geeft coherent antwoord op wiskunde.
+
+================================================================================
+TASK 4: GITHUB PUSH VAN K:\ STAY4S-OPENCODE BUNDEL (P1)
+================================================================================
+
+LOCATIE: PC — C:\Users\Gebruiker
+
+STAPPEN:
+1. Check K: drive: dir K:\stay4s\STAY4S-KNOWLEDGE\00_INBOX\OPENCODE\
+2. Check GitHub: cd C:\Users\Gebruiker && git status
+3. Stage relevante bestanden: git add OPENCODE_SUPER_PROMPT_20261009.txt
+4. Commit: git commit -m "docs: OpenCode super command prompt (9 okt)"
+5. Push: git pull --rebase origin master && git push origin master
+
+DOEL: OpenCode rapporten op GitHub + K: drive synced.
+
+================================================================================
+TASK 5: RUNPOD TRAINING DATA GENEREREN (P1)
+================================================================================
+
+LOCATIE: PC — C:\Users\Gebruiker
+
+STAPPEN:
+1. Genereer 5000 extra training records:
+   - 2000 math (vermenigvuldigen, delen, procenten, algebra)
+   - 1000 reasoning (logica, oorzaak-gevolg, analogieen)
+   - 1000 code (Python, JavaScript, Kotlin voorbeelden)
+   - 500 Dutch conversation (dagelijks gebruik)
+   - 500 tool_use (API calls, web search, file operations)
+
+2. Format: JSONL met {"text": "prompt\tresponse"} of {"messages": [{"role":"user","content":"..."},{"role":"assistant","content":"..."}]}
+
+3. Upload naar RunPod:
+   scp -i ~/.ssh/stay4pi_ed25519 -P 22194 training_extra_5k.jsonl root@194.68.245.70:/workspace/
+
+4. Upload naar Pi 5:
+   scp -i ~/.ssh/stay4pi_ed25519 training_extra_5k.jsonl Miesdevries@100.123.235.81:/mnt/usb4/
+
+DOEL: 5000 extra records op RunPod klaar voor volgende training cycle.
+
+================================================================================
+TASK 6: SUBDOMEINEN TESTEN (P1)
+================================================================================
+
+LOCATIE: PC — PowerShell
+
+STAPPEN:
+1. Test alle 36 subdomeinen:
+   $domains = @(
+     "stay4s.com","www.stay4s.com","api.stay4s.com","safe.stay4s.com",
+     "compa.stay4s.com","vault.stay4s.com","companion.stay4s.com","video.stay4s.com",
+     "docs.stay4s.com","billing.stay4s.com","pay.stay4s.com","subscribe.stay4s.com",
+     "chat.stay4s.com","summary.stay4s.com","find.stay4s.com","monitor.stay4s.com",
+     "agent.stay4s.com","search.stay4s.com","translate.stay4s.com","code.stay4s.com",
+     "content.stay4s.com","email.stay4s.com","voice.stay4s.com","scam.stay4s.com",
+     "scan.stay4s.com","social.stay4s.com","dream.stay4s.com","health.stay4s.com",
+     "rag.stay4s.com","kg.stay4s.com","sysadmin.stay4s.com","mesh.stay4s.com",
+     "memory.stay4s.com","marketplace.stay4s.com","docgen.stay4s.com","keys.stay4s.com"
+   )
+   foreach ($d in $domains) {
+     $code = (curl.exe -s -o NUL -w "%{http_code}" --max-time 5 "https://$d" 2>&1)
+     Write-Host "$code $d"
+   }
+
+2. Rapporteer: welke 200/301/302/404/000
+
+DOEL: Volledige subdomein status rapport.
+
+================================================================================
+TASK 7: AI_POWERSHELL FANTOOM VERWIJDEREN (P1 — quick win)
+================================================================================
+
+LOCATIE: Pi 5 — ssh -i ~/.ssh/stay4pi_ed25519 Miesdevries@100.123.235.81
+
+STAPPEN:
+1. Find monitor: find /mnt/usb4 /opt/stay4s -name "ai_monitor*" -o -name "monitor*" 2>/dev/null
+2. Find ai_powershell reference: grep -r "ai_powershell\|8079" /mnt/usb4/*.py /opt/stay4s/*.py 2>/dev/null
+3. Verwijder ai_powershell uit de service lijst
+4. Herstart monitor: pkill -f ai_monitor; nohup python3 /mnt/usb4/ai_monitor.py &
+5. Verify: monitor zou nu 35/35 moeten zijn
+
+DOEL: Monitor 35/35 online, geen fantoom service meer.
+
+================================================================================
+
+RAPPORTAGE FORMAT (verplicht)
+================================================================================
+Schrijf JSON naar: K:\stay4s\STAY4S-KNOWLEDGE\00_INBOX\OPENCODE\
+
+{
+  "task": "TASK_1_VIDEO_OF_TASK_7_MONITOR",
+  "timestamp": "2026-10-09T00:30:00Z",
+  "done": ["wat je gedaan hebt"],
+  "found": ["wat je gevonden hebt"],
+  "ready": ["wat klaar is"],
+  "can": [" wat je nu kunt doen"],
+  "need": ["wat je nodig hebt van Droid of Owner"]
+}
+
+REGEL: NOOIT rapporteren zonder ps/tcp/systemd/curl checks.
+
+================================================================================
+PRIORITEIT VOLGORDE: 1 → 3 → 2 → 7 → 6 → 5 → 4
+================================================================================
