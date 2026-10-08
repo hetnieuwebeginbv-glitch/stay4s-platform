@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="nl"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stay4S">
+<meta name="theme-color" content="#0a0e27">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23667eea'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='system-ui' font-weight='bold'>S4</text></svg>">
+<title>Stay4S Companion v2</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+:root{--bg:#0a0e27;--card:rgba(21,26,58,0.7);--card-solid:#151a3a;--border:rgba(42,48,80,0.6);--primary:#667eea;--primary2:#764ba2;--text:#e0e0e0;--green:#49b675;--red:#e74c3c;--gold:#ffd700;--cyan:#00d4ff;--safe-top:env(safe-area-inset-top,44px);--safe-bot:env(safe-area-inset-bottom,34px)}
+body{background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at top,rgba(102,126,234,0.15),transparent 50%),radial-gradient(ellipse at bottom right,rgba(118,75,162,0.1),transparent 50%);pointer-events:none;z-index:0}
+#app{max-width:500px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding-top:var(--safe-top);padding-bottom:var(--safe-bot);position:relative;z-index:1}
+.header{background:linear-gradient(135deg,var(--primary),var(--primary2));padding:16px 20px;text-align:center;position:sticky;top:0;z-index:100;border-radius:0 0 24px 24px;box-shadow:0 4px 30px rgba(0,0,0,0.3)}
+.header h1{color:#fff;font-size:22px;font-weight:700}
+.header p{color:rgba(255,255,255,0.7);font-size:12px;margin-top:2px}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:6px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.model-selector{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.15);border-radius:20px;padding:4px 12px;margin-left:8px;cursor:pointer;font-size:12px;color:#fff}
+.model-dropdown{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:var(--card-solid);border:1px solid var(--border);border-radius:16px;padding:8px;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:200;display:none;min-width:200px}
+.model-dropdown.show{display:block}
+.model-option{padding:10px 14px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.model-option.active{background:rgba(102,126,234,0.2)}
+.model-option .badge{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--primary);color:#fff}
+.model-option .badge.free{background:var(--green)}
+.model-option .badge.pro{background:var(--gold);color:#000}
+.tabs{display:flex;padding:8px;gap:6px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;padding:10px 16px;background:var(--card);border-radius:12px;border:1px solid var(--border);font-size:14px;color:var(--text);cursor:pointer;white-space:nowrap;transition:all 0.2s}
+.tab.active{background:var(--primary);border-color:var(--primary);color:#fff;transform:scale(1.05)}
+.content{flex:1;padding:12px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.glass-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin:8px 0;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
+.glass-card h3{color:var(--primary);font-size:16px;margin-bottom:8px}
+.glass-card p{font-size:14px;line-height:1.5;color:#aaa}
+.chat-area{display:flex;flex-direction:column;gap:10px;padding-bottom:10px}
+.msg{max-width:85%;padding:12px 16px;border-radius:18px;font-size:15px;line-height:1.5;word-wrap:break-word;animation:slideIn 0.3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{align-self:flex-end;background:var(--primary);color:#fff;border-bottom-right-radius:4px}
+.msg.ai{align-self:flex-start;background:var(--card);border:1px solid var(--border);border-bottom-left-radius:4px}
+.msg.system{align-self:center;background:transparent;color:#666;font-size:12px;text-align:center}
+.suggestion-chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chip{padding:6px 14px;background:rgba(102,126,234,0.15);border:1px solid rgba(102,126,234,0.3);border-radius:20px;font-size:13px;color:var(--primary);cursor:pointer}
+.input-area{padding:10px 12px;background:var(--bg);border-top:1px solid var(--border);display:flex;gap:8px;position:sticky;bottom:0;align-items:center}
+.input-area input{flex:1;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:20px;color:#fff;font-size:15px;outline:none}
+.input-area input::placeholder{color:#555}
+.input-area button{width:44px;height:44px;border-radius:50%;background:var(--primary);border:none;color:#fff;font-size:20px;cursor:pointer;flex:0 0 auto}
+.input-area .mic{background:rgba(102,126,234,0.2);border:1px solid var(--border);width:auto;padding:0 12px;font-size:12px;border-radius:20px}
+.btn{display:block;width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin:8px 0}
+.btn:active{transform:scale(0.97)}
+.btn.green{background:var(--green)}.btn.red{background:var(--red)}.btn.gold{background:var(--gold);color:#000}.btn.outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.scan-result{padding:14px;border-radius:12px;margin:8px 0;font-size:14px}
+.scan-safe{background:rgba(73,182,117,0.15);border:1px solid var(--green);color:var(--green)}
+.scan-danger{background:rgba(231,76,60,0.15);border:1px solid var(--red);color:var(--red)}
+.scan-warn{background:rgba(255,215,0,0.15);border:1px solid var(--gold);color:var(--gold)}
+textarea{width:100%;min-height:120px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:#fff;font-size:15px;outline:none;resize:vertical}
+select{padding:12px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:#fff;font-size:14px}
+.loading{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.typing{display:flex;gap:4px;padding:12px 16px}
+.typing span{width:8px;height:8px;background:#555;border-radius:50%;animation:typing 1.4s infinite}
+.typing span:nth-child(2){animation-delay:0.2s}.typing span:nth-child(3){animation-delay:0.4s}
+@keyframes typing{0%,60%,100%{opacity:0.3}30%{opacity:1}}
+.hidden{display:none}
+.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.feature{background:var(--card);padding:14px;border-radius:12px;text-align:center;border:1px solid var(--border);cursor:pointer}
+.onboarding{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.onboarding .logo{font-size:48px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--primary2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:20px}
+.onboarding h2{color:#fff;font-size:24px;margin-bottom:8px;text-align:center}
+.onboarding p{color:#888;font-size:15px;text-align:center;margin-bottom:24px;max-width:300px}
+.onboarding input{width:100%;max-width:300px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:#fff;font-size:16px;outline:none;margin-bottom:12px}
+.lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:300px;margin-bottom:16px}
+.lang-btn{padding:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:#fff;font-size:15px;cursor:pointer;text-align:center}
+.lang-btn.active{background:var(--primary);border-color:var(--primary)}
+.contact-item{display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;cursor:pointer;border-bottom:1px solid var(--border)}
+.avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold;font-size:18px;flex-shrink:0}
+.contact-name{font-size:16px;font-weight:600;color:#fff}
+.contact-last{font-size:13px;color:#666}
+.presence-dot{width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0}
+.video-result{border-radius:12px;overflow:hidden;margin:8px 0}
+.recording{animation:pulse 1s infinite;background:var(--red)!important}
+</style></head><body>
+<!-- Onboarding -->
+<div id="onboarding" class="onboarding hidden">
+<div class="logo">Stay4S</div>
+<div id="onboard-content"></div>
+</div>
+<div id="app">
+<div class="header">
+<h1><span class="status-dot"></span>Stay4S Companion<span class="model-selector" onclick="toggleModel()">Snel&#9662;</span></h1>
+<div class="model-dropdown" id="model-dropdown">
+<div class="model-option active" onclick="selectModel('snel','Snel (lokaal)')"><span>Snel</span><span class="badge free">GRATIS</span></div>
+<div class="model-option" onclick="selectModel('pro','Pro (Cloud)')"><span>Pro</span><span class="badge pro">EUR 0.05</span></div>
+<div class="model-option" onclick="selectModel('code','Code Agent')"><span>Code</span><span class="badge">EUR 0.03</span></div>
+<div class="model-option" onclick="selectModel('scam','Scam Check')"><span>Scam</span><span class="badge free">GRATIS</span></div>
+</div>
+<p>Soevereine Nederlandse AI</p>
+</div>
+<div class="tabs">
+<div class="tab active" onclick="showTab('chat',event)">Chat</div>
+<div class="tab" onclick="showTab('messages',event)">Berichten</div>
+<div class="tab" onclick="showTab('video',event)">Video</div>
+<div class="tab" onclick="showTab('scan',event)">Scam Scan</div>
+<div class="tab" onclick="showTab('translate',event)">Vertaal</div>
+<div class="tab" onclick="showTab('summarize',event)">Samenvatten</div>
+<div class="tab" onclick="showTab('code',event)">Code</div>
+<div class="tab" onclick="showTab('settings',event)">Instellingen</div>
+</div>
+<div class="content" id="content">
+<div id="chat" class="tab-content">
+<div class="chat-area" id="chat-messages">
+<div class="msg ai">Hallo! Ik ben Stay4S AI. Waar kan ik je mee helpen?</div>
+</div>
+<div class="suggestion-chips" id="suggestions">
+<div class="chip" onclick="quickAsk('Wat kan jij?')">Wat kan jij?</div>
+<div class="chip" onclick="quickAsk('Reken 15x37 voor me uit')">15x37?</div>
+<div class="chip" onclick="quickAsk('Schrijf een email naar mijn baas')">Schrijf email</div>
+<div class="chip" onclick="quickAsk('Vertaal dit naar Engels: Hallo Wereld')">Vertaal</div>
+</div>
+</div>
+<div id="messages" class="tab-content hidden">
+<div id="msg-auth">
+<h3 style="color:var(--primary);margin-bottom:10px">Stay4S Berichten</h3>
+<p style="color:#aaa;font-size:14px;margin-bottom:12px">Veilig chatten met andere Stay4S gebruikers. Geen Big Tech, geen tracking.</p>
+<input type="text" id="msg-username" placeholder="Gebruikersnaam" style="width:100%;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:#fff;font-size:15px;outline:none;margin-bottom:8px">
+<input type="password" id="msg-password" placeholder="Wachtwoord" style="width:100%;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:#fff;font-size:15px;outline:none;margin-bottom:8px">
+<button class="btn" onclick="msgRegister()">Account aanmaken</button>
+<button class="btn outline" onclick="msgLogin()">Inloggen</button>
+</div>
+<div id="msg-app" class="hidden">
+<div id="msg-contacts"></div>
+<div id="msg-chat" class="hidden">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+<button class="btn outline" style="width:auto;padding:8px 16px" onclick="msgBackToList()">Terug</button>
+<h3 id="msg-chat-name" style="color:var(--primary);flex:1"></h3>
+</div>
+<div class="chat-area" id="msg-chat-area"></div>
+<input type="text" id="msg-input" placeholder="Typ bericht..." style="width:100%;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:20px;color:#fff;font-size:15px;outline:none;margin-top:8px" onkeypress="if(event.key==='Enter')msgSend()">
+</div>
+</div>
+</div>
+<div id="video" class="tab-content hidden">
+<h3 style="color:var(--primary);margin-bottom:10px">Video Generatie</h3>
+<p style="color:#aaa;font-size:14px;margin-bottom:12px">Genereer een korte video uit tekst met LTX-Video AI.</p>
+<textarea id="video-input" placeholder="Beschrijf de video... bijv: sunset over amsterdam canals" style="min-height:80px"></textarea>
+<div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">
+<select id="video-width"><option value="512">512px breed</option><option value="768">768px breed</option></select>
+<select id="video-height"><option value="320">320px hoog</option><option value="480">480px hoog</option></select>
+<select id="video-frames"><option value="24">24 frames</option><option value="32" selected>32 frames</option><option value="48">48 frames</option></select>
+</div>
+<button class="btn gold" onclick="doVideo()">Genereer Video</button>
+<div id="video-result"></div>
+<div class="glass-card" style="margin-top:12px">
+<h3>Prijs</h3>
+<p>EUR 0.10 per video | Snelheid: 15-30s</p>
+</div>
+</div>
+<div id="scan" class="tab-content hidden">
+<h3 style="color:var(--primary);margin-bottom:10px">Scam Detector</h3>
+<p style="color:#aaa;font-size:14px;margin-bottom:12px">Plak een verdacht bericht en ik scan het op scam patronen.</p>
+<textarea id="scan-input" placeholder="Plak hier het verdachte bericht..."></textarea>
+<button class="btn red" onclick="doScan()">Scan bericht</button>
+<div id="scan-result"></div>
+</div>
+<div id="translate" class="tab-content hidden">
+<h3 style="color:var(--primary);margin-bottom:10px">Vertalen</h3>
+<textarea id="translate-input" placeholder="Tekst om te vertalen..." style="min-height:100px"></textarea>
+<div style="display:flex;gap:8px;margin:10px 0">
+<select id="translate-target" style="flex:1"><option value="en">Engels</option><option value="de">Duits</option><option value="fr">Frans</option><option value="es">Spaans</option><option value="nl">Nederlands</option></select>
+<button class="btn" onclick="doTranslate()">Vertaal</button>
+</div>
+<div id="translate-result"></div>
+</div>
+<div id="summarize" class="tab-content hidden">
+<h3 style="color:var(--primary);margin-bottom:10px">Samenvatten</h3>
+<textarea id="summarize-input" placeholder="Plak hier de lange tekst..." style="min-height:150px"></textarea>
+<button class="btn" onclick="doSummarize()">Vat samen</button>
+<div id="summarize-result"></div>
+</div>
+<div id="code" class="tab-content hidden">
+<h3 style="color:var(--primary);margin-bottom:10px">Code Generator</h3>
+<textarea id="code-input" placeholder="Beschrijf wat de code moet doen..." style="min-height:80px"></textarea>
+<div style="display:flex;gap:8px;margin:10px 0">
+<select id="code-lang" style="flex:1"><option value="python">Python</option><option value="javascript">JavaScript</option><option value="kotlin">Kotlin</option><option value="bash">Bash</option><option value="html">HTML</option></select>
+<button class="btn" onclick="doCode()">Genereer</button>
+</div>
+<div id="code-result"></div>
+</div>
+<div id="settings" class="tab-content hidden">
+<div class="glass-card"><h3>Profiel</h3><p>Naam: <span id="settings-name" style="color:var(--green)">Niet ingesteld</span></p><p>Taal: <span id="settings-lang" style="color:var(--green)">Nederlands</span></p><p>Model: <span id="settings-model" style="color:var(--green)">Snel</span></p></div>
+<div class="glass-card"><h3>AI Pauze</h3><p>Stop AI maar app blijft werken</p><button class="btn outline" id="pause-btn" onclick="togglePause()">AI Pauzeren</button></div>
+<div class="glass-card"><h3>Profiel Modus</h3><div style="display:flex;gap:6px;margin:8px 0"><button class="btn outline" style="flex:1;padding:10px" onclick="setProfile('thuis')">Thuis</button><button class="btn outline" style="flex:1;padding:10px" onclick="setProfile('werk')">Werk</button><button class="btn outline" style="flex:1;padding:10px" onclick="setProfile('slaap')">Slaap</button></div></div>
+<div class="glass-card"><h3>Privacy</h3><p>Geen Big Tech. Cloudflare (EU) + Pi 5 (lokaal). AVG-conform.</p><p>Learning: <span id="settings-learn" style="color:var(--green)">Aan</span></p><button class="btn outline" onclick="toggleLearn()">Learning uitschakelen</button></div>
+<div class="glass-card"><h3>Stay4S Companion</h3><p>Versie: 2.0 (PWA)</p><p>Gateway: api.stay4s.com</p><p>AI: Llama 3.3 70B + Ollama</p><p>Video: LTX-Video</p><p>Berichten: companion.stay4s.com</p><p>Het Nieuwe Begin BV</p></div>
+</div>
+</div>
+<div class="input-area" id="input-bar">
+<button class="mic" onclick="startVoice()" id="mic-btn">MIC</button>
+<input type="text" id="chat-input" placeholder="Stel een vraag..." onkeypress="if(event.key==='Enter')sendChat()">
+<button onclick="sendChat()">Send</button>
+</div>
+</div>
+<script>
+const API_URL='https://api.stay4s.com';
+const API_KEY='stay4s-pro-demo';
+const MSG_URL='https://companion.stay4s.com';
+const VIDEO_URL='https://video.stay4s.com';
+let currentModel='snel';
+let msgToken=localStorage.getItem('msg_token')||'';
+let msgUser=localStorage.getItem('msg_user')||'';
+let isPaused=false;
+let learnEnabled=localStorage.getItem('learn')!=='off';
+let msgChatWith='';
+
+function checkOnboarding(){
+if(!localStorage.getItem('onboarded')){document.getElementById('onboarding').classList.remove('hidden');onboardStep(0);}
+}
+function onboardStep(s){
+const c=document.getElementById('onboard-content');
+if(s===0){c.innerHTML='<h2>Welkom bij Stay4S!</h2><p>Jouw soevereine Nederlandse AI. Geen Big Tech, geen tracking.</p><button class="btn" onclick="onboardStep(1)">Beginnen</button>';}
+else if(s===1){c.innerHTML='<h2>Hoe heet je?</h2><p>Ik gebruik je naam om je beter te helpen.</p><input type="text" id="onboard-name" placeholder="Je naam"><button class="btn" onclick="onboardStep(2)">Volgende</button>';}
+else if(s===2){const n=document.getElementById('onboard-name').value.trim()||'Gebruiker';localStorage.setItem('user_name',n);c.innerHTML='<h2>Welke taal?</h2><div class="lang-grid"><div class="lang-btn active" onclick="pickLang(this,\'nl\')">Nederlands</div><div class="lang-btn" onclick="pickLang(this,\'en\')">Engels</div><div class="lang-btn" onclick="pickLang(this,\'de\')">Duits</div><div class="lang-btn" onclick="pickLang(this,\'fr\')">Frans</div></div><button class="btn" onclick="onboardStep(3)">Volgende</button>';}
+else if(s===3){c.innerHTML='<h2>Privacy</h2><p>Mag ik van je gesprekken leren? Alles blijft lokaal en privaat.</p><button class="btn green" onclick="setLearn(true)">Ja, leren is ok</button><button class="btn outline" onclick="setLearn(false)">Nee, liever niet</button>';}
+}
+function pickLang(el,lang){document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');localStorage.setItem('user_lang',lang);}
+function setLearn(v){localStorage.setItem('learn',v?'on':'off');learnEnabled=v;localStorage.setItem('onboarded','1');document.getElementById('onboarding').classList.add('hidden');updateSettings();}
+
+function toggleModel(){document.getElementById('model-dropdown').classList.toggle('show');}
+function selectModel(m,name){currentModel=m;document.querySelector('.model-selector').innerHTML=name+'&#9662;';document.getElementById('model-dropdown').classList.remove('show');localStorage.setItem('model',m);updateSettings();}
+document.addEventListener('click',e=>{if(!e.target.closest('.model-selector')&&!e.target.closest('.model-dropdown')){document.getElementById('model-dropdown').classList.remove('show');}});
+
+async function apiCall(endpoint,body){
+body=body||{};body.model=currentModel;
+try{
+const r=await fetch(API_URL+'/v1/'+endpoint,{method:'POST',headers:{'Authorization':'Bearer '+API_KEY,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(45000)});
+if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();
+}catch(e){throw e;}
+}
+
+function showTab(t,ev){
+document.querySelectorAll('.tab-content').forEach(c=>c.classList.add('hidden'));
+document.getElementById(t).classList.remove('hidden');
+if(ev){document.querySelectorAll('.tab').forEach(tab=>tab.classList.remove('active'));ev.target.classList.add('active');}
+document.getElementById('input-bar').classList.toggle('hidden',t!=='chat');
+if(t==='messages'&&!msgToken){document.getElementById('msg-auth').classList.remove('hidden');document.getElementById('msg-app').classList.add('hidden');}
+if(t==='messages'&&msgToken){loadContacts();}
+if(t==='settings'){updateSettings();}
+}
+
+function quickAsk(q){document.getElementById('chat-input').value=q;sendChat();}
+async function sendChat(){
+if(isPaused){alert('AI is gepauzeerd. Schakel in via Instellingen.');return;}
+const input=document.getElementById('chat-input');const msg=input.value.trim();if(!msg)return;input.value='';
+const messages=document.getElementById('chat-messages');
+const userMsg=document.createElement('div');userMsg.className='msg user';userMsg.textContent=msg;messages.appendChild(userMsg);
+const typing=document.createElement('div');typing.className='msg ai';typing.id='typing-indicator';
+typing.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';messages.appendChild(typing);
+document.getElementById('suggestions').classList.add('hidden');
+messages.scrollTop=messages.scrollHeight;
+try{
+const r=await apiCall('chat',{prompt:msg});
+document.getElementById('typing-indicator').remove();
+const aiMsg=document.createElement('div');aiMsg.className='msg ai';aiMsg.textContent=r.response;messages.appendChild(aiMsg);
+showSmartSuggestions(msg);
+}catch(e){document.getElementById('typing-indicator').remove();const errMsg=document.createElement('div');errMsg.className='msg system';errMsg.textContent='Verbinding mislukt.';messages.appendChild(errMsg);}
+messages.scrollTop=messages.scrollHeight;
+}
+function showSmartSuggestions(msg){
+const sug=document.getElementById('suggestions');let chips='';
+if(/afspraak|herinner|deadline|tijd/i.test(msg)){chips+='<div class="chip" onclick="quickAsk(\'Maak een herinnering aan\')">Herinnering?</div>';}
+if(/wachtwoord|pin|geheim/i.test(msg)){chips+='<div class="chip" onclick="alert(\'Opgeslagen in kluis\')">Kluis?</div>';}
+if(/engels|english|vertaal/i.test(msg)){chips+='<div class="chip" onclick="showTab(\'translate\',event)">Vertalen?</div>';}
+if(/scam|phishing|verdacht/i.test(msg)){chips+='<div class="chip" onclick="showTab(\'scan\',event)">Scam check?</div>';}
+if(!chips){chips='<div class="chip" onclick="quickAsk(\'Leg dat verder uit\')">Leg uit</div><div class="chip" onclick="quickAsk(\'Geef een voorbeeld\')">Voorbeeld</div>';}
+sug.classList.remove('hidden');sug.innerHTML=chips;
+}
+
+function startVoice(){
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SR){alert('Spraak niet ondersteund.');return;}
+const rec=new SR();rec.lang='nl-NL';
+rec.onstart=()=>{document.getElementById('mic-btn').classList.add('recording');};
+rec.onend=()=>{document.getElementById('mic-btn').classList.remove('recording');};
+rec.onresult=(e)=>{document.getElementById('chat-input').value=e.results[0][0].transcript;sendChat();};
+rec.start();
+}
+
+async function msgRegister(){
+const u=document.getElementById('msg-username').value.trim();const p=document.getElementById('msg-password').value;
+if(!u||!p){alert('Vul beide velden in.');return;}
+try{
+const r=await fetch(MSG_URL+'/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+const d=await r.json();if(d.token){msgToken=d.token;msgUser=u;localStorage.setItem('msg_token',d.token);localStorage.setItem('msg_user',u);document.getElementById('msg-auth').classList.add('hidden');document.getElementById('msg-app').classList.remove('hidden');loadContacts();}else{alert(d.error||'Mislukt');}
+}catch(e){alert('Fout: '+e.message);}
+}
+async function msgLogin(){
+const u=document.getElementById('msg-username').value.trim();const p=document.getElementById('msg-password').value;
+if(!u||!p){alert('Vul beide velden in.');return;}
+try{
+const r=await fetch(MSG_URL+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+const d=await r.json();if(d.token){msgToken=d.token;msgUser=u;localStorage.setItem('msg_token',d.token);localStorage.setItem('msg_user',u);document.getElementById('msg-auth').classList.add('hidden');document.getElementById('msg-app').classList.remove('hidden');loadContacts();}else{alert(d.error||'Mislukt');}
+}catch(e){alert('Fout: '+e.message);}
+}
+async function loadContacts(){
+try{
+const r=await fetch(MSG_URL+'/contacts',{headers:{'Authorization':'Bearer '+msgToken}});const d=await r.json();
+const list=document.getElementById('msg-contacts');list.innerHTML='<h3 style="color:var(--primary);margin-bottom:10px">Contacten</h3>';
+if(d.contacts&&d.contacts.length>0){d.contacts.forEach(c=>{const div=document.createElement('div');div.className='contact-item';div.innerHTML='<div class="avatar">'+c.username[0].toUpperCase()+'</div><div style="flex:1"><div class="contact-name">'+c.username+'</div><div class="contact-last">'+(c.last_message||'Nieuw')+'</div></div><div class="presence-dot"></div>';div.onclick=()=>openChat(c.username);list.appendChild(div);});}
+else{list.innerHTML+='<p style="color:#666;text-align:center;padding:20px">Nog geen contacten. Deel je gebruikersnaam!</p>';}
+list.innerHTML+='<div style="margin-top:12px"><input type="text" id="new-contact" placeholder="Gebruikersnaam toevoegen..." style="width:100%;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:#fff;font-size:15px;outline:none;margin-bottom:8px"><button class="btn" onclick="addContact()">Toevoegen</button></div>';
+document.getElementById('msg-contacts').classList.remove('hidden');document.getElementById('msg-chat').classList.add('hidden');
+}catch(e){console.error(e);}
+}
+async function addContact(){const u=document.getElementById('new-contact').value.trim();if(!u)return;try{await fetch(MSG_URL+'/contacts',{method:'POST',headers:{'Authorization':'Bearer '+msgToken,'Content-Type':'application/json'},body:JSON.stringify({username:u})});loadContacts();}catch(e){alert('Mislukt');}}
+async function openChat(username){msgChatWith=username;document.getElementById('msg-contacts').classList.add('hidden');document.getElementById('msg-chat').classList.remove('hidden');document.getElementById('msg-chat-name').textContent=username;await loadMessages();}
+async function loadMessages(){
+try{
+const r=await fetch(MSG_URL+'/messages/'+msgChatWith,{headers:{'Authorization':'Bearer '+msgToken}});const d=await r.json();
+const area=document.getElementById('msg-chat-area');area.innerHTML='';
+if(d.messages){d.messages.forEach(m=>{const div=document.createElement('div');div.className='msg '+(m.from===msgUser?'user':'ai');div.textContent=m.text;area.appendChild(div);});}
+area.scrollTop=area.scrollHeight;
+}catch(e){console.error(e);}
+}
+async function msgSend(){
+const input=document.getElementById('msg-input');const text=input.value.trim();if(!text)return;input.value='';
+try{
+await fetch(MSG_URL+'/chat',{method:'POST',headers:{'Authorization':'Bearer '+msgToken,'Content-Type':'application/json'},body:JSON.stringify({to:msgChatWith,message:text})});loadMessages();
+}catch(e){alert('Verzenden mislukt');}
+}
+function msgBackToList(){document.getElementById('msg-contacts').classList.remove('hidden');document.getElementById('msg-chat').classList.add('hidden');msgChatWith='';}
+
+async function doVideo(){
+const input=document.getElementById('video-input').value.trim();if(!input)return;
+const result=document.getElementById('video-result');
+result.innerHTML='<div class="glass-card"><div class="loading"></div> Video genereren... (15-30s)</div>';
+try{
+const r=await fetch(VIDEO_URL+'/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:input,width:parseInt(document.getElementById('video-width').value),height:parseInt(document.getElementById('video-height').value),num_frames:parseInt(document.getElementById('video-frames').value),steps:20})});
+const d=await r.json();if(d.video){result.innerHTML='<div class="glass-card"><h3>Video klaar!</h3><div class="video-result"><img src="data:image/gif;base64,'+d.video+'" alt="video"></div><p>'+(d.latency_ms/1000).toFixed(1)+'s | '+d.frames+' frames</p></div>';}
+else{result.innerHTML='<div class="glass-card"><p>Mislukt: '+(d.detail||'')+'</p></div>';}
+}catch(e){result.innerHTML='<div class="glass-card"><p>Video server niet bereikbaar.</p></div>';}
+}
+
+async function doScan(){const input=document.getElementById('scan-input').value.trim();if(!input)return;const result=document.getElementById('scan-result');result.innerHTML='<div class="glass-card"><div class="loading"></div> Scannen...</div>';try{const r=await apiCall('scan',{message:input});result.innerHTML='<div class="scan-result">'+r.result+'</div>';}catch(e){result.innerHTML='<div class="scan-result scan-warn">Mislukt.</div>';}}
+async function doTranslate(){const input=document.getElementById('translate-input').value.trim();if(!input)return;const result=document.getElementById('translate-result');result.innerHTML='<div class="glass-card"><div class="loading"></div> Vertalen...</div>';try{const r=await apiCall('translate',{text:input,target:document.getElementById('translate-target').value});result.innerHTML='<div class="glass-card"><h3>Vertaling</h3><p>'+r.result+'</p></div>';}catch(e){result.innerHTML='<div class="glass-card"><p>Mislukt.</p></div>';}}
+async function doSummarize(){const input=document.getElementById('summarize-input').value.trim();if(!input)return;const result=document.getElementById('summarize-result');result.innerHTML='<div class="glass-card"><div class="loading"></div> Samenvatten...</div>';try{const r=await apiCall('summarize',{text:input});result.innerHTML='<div class="glass-card"><h3>Samenvatting</h3><p>'+r.summary+'</p></div>';}catch(e){result.innerHTML='<div class="glass-card"><p>Mislukt.</p></div>';}}
+async function doCode(){const input=document.getElementById('code-input').value.trim();if(!input)return;const lang=document.getElementById('code-lang').value;const result=document.getElementById('code-result');result.innerHTML='<div class="glass-card"><div class="loading"></div> Code genereren...</div>';try{const r=await apiCall('code',{description:input,language:lang});result.innerHTML='<div class="glass-card"><h3>'+lang+'</h3><pre style="background:#0a0e27;padding:12px;border-radius:8px;overflow-x:auto;color:var(--green);font-size:13px;white-space:pre-wrap">'+r.code+'</pre></div>';}catch(e){result.innerHTML='<div class="glass-card"><p>Mislukt.</p></div>';}}
+
+function updateSettings(){
+document.getElementById('settings-name').textContent=localStorage.getItem('user_name')||'Niet ingesteld';
+document.getElementById('settings-lang').textContent=localStorage.getItem('user_lang')||'Nederlands';
+const m=localStorage.getItem('model')||'snel';const mn={snel:'Snel',pro:'Pro',code:'Code',scam:'Scam'};document.getElementById('settings-model').textContent=mn[m]||'Snel';
+document.getElementById('settings-learn').textContent=learnEnabled?'Aan':'Uit';
+}
+function togglePause(){isPaused=!isPaused;document.getElementById('pause-btn').textContent=isPaused?'AI Hervatten':'AI Pauzeren';}
+function setProfile(p){localStorage.setItem('profile',p);alert('Profiel: '+p);}
+function toggleLearn(){learnEnabled=!learnEnabled;localStorage.setItem('learn',learnEnabled?'on':'off');updateSettings();}
+
+checkOnboarding();updateSettings();
+</script>
+</body></html>
