@@ -1,0 +1,113 @@
+# SUPER PROMPT: AOSP 16 Build voor Pixel 9a (tegu) - Grok
+
+## Situatie
+Wij bouwen een custom Android ROM (Stay4OS) voor de Pixel 9a. We proberen pure AOSP 16 (android-16.0.0_r1) te bouwen op een Vast.ai instance met:
+- RTX 3080 (10GB VRAM)
+- 64 vCPUs AMD EPYC
+- 126GB RAM
+- 300GB disk
+- Docker container met nvidia/cuda:12.1.1-devel-ubuntu22.04
+
+## Wat werkt al
+- `repo init -u https://android.googlesource.com/platform/manifest -b android-16.0.0_r1 --depth=1`
+- `repo sync -c -j4 --no-clone-bundle --no-tags` (41GB, sync completed successfully)
+- Device trees gekloned van LineageOS:
+  - `device/google/tegu` (Pixel 9a)
+  - `device/google/zumapro` (SoC)
+  - `device/google/gs-common`
+- Java 17 geinstalleerd
+- `source build/envsetup.sh` werkt
+- `make aidl` werkt
+- Soong build system compileert (133/133 targets)
+
+## Wat faalt - 3 kritieke fouten
+
+### Fout 1: "missing separator" in device/google/zumapro/common.mk:178
+We probeerden LineageOS-specifieke includes uit te commentarieren met:
+```bash
+sed -i 's|include hardware/google/pixel/|# include hardware/google/pixel/|g' device/google/zumapro/common.mk
+sed -i 's|-include hardware/google/pixel/|# -include hardware/google/pixel/|g' device/google/zumapro/common.mk
+```
+Dit creert regels zoals:
+```makefile
+# include hardware/google/pixel/power-libperfmgr/aidl/device.mk
+# -include hardware/google/pixel/pixelstats/device.mk
+```
+Makefile geeft "missing separator" error op deze regels. Waarschijnlijk omdat `# include` niet geldig is als makefile syntax.
+
+De oorspronkelijke regels zijn:
+```makefile
+include hardware/google/pixel/power-libperfmgr/aidl/device.mk
+include hardware/google/pixel/rebalance_interrupts/rebalance_interrupts.mk
+-include hardware/google/pixel/pixelstats/device.mk
+include hardware/google/pixel/common/pixel-common-device.mk
+include hardware/google/pixel/wifi_ext/device.mk
+include hardware/google/pixel/HardwareInfo/HardwareInfo.mk
+include hardware/google/pixel/touch/device.mk
+include hardware/google/pixel/mm/device_gki.mk
+```
+Geen van deze files bestaat in pure AOSP (alleen in LineageOS).
+
+### Fout 2: "unknown target 'bacon'"
+`m bacon` is een LineageOS-specifiek target. In pure AOSP bestaat dit niet.
+We moeten waarschijnlijk `m otapackage` of `m target-files-package` gebruiken.
+
+### Fout 3: Geen kernel
+```
+Neither INSTALLED_KERNEL_TARGET nor INSTALLED_BOOTIMAGE_TARGET is defined
+when PRODUCT_OTA_ENFORCE_VINTF_KERNEL_REQUIREMENTS is true
+```
+De device tree verwijst naar kernels die niet bestaan:
+```
+device/google/tegu-kernels/6.1: No such file or directory
+```
+
+### Fout 4: nsjail (niet kritiek)
+```
+Build sandboxing disabled due to nsjail error
+```
+nsjail werkt niet in Docker containers. Dit geeft warnings maar breekt de build niet.
+
+## Wat we ook hebben geprobeerd
+- `hardware/google/pixel/lineage_health/device.mk` -> Android.mk file werd geblokkeerd door AOSP 16 denylist
+- `device/google/tegu-kernels/6.1/Android.mk` -> ook geblokkeerd door denylist
+- `TEMPORARY_DISABLE_PATH_RESTRICTIONS=true` -> "obsolete" in AOSP 16
+- `ALLOW_MISSING_DEPENDENCIES=true` -> geen effect
+- `BUILD_BROKEN_MISSING_REQUIRED_MODULES=true` -> geen effect
+- `TARGET_RELEASE=bp2a` -> loste de "trunk_staging" panic op
+- Lege stub files maken -> geblokkeerd door Android.mk denylist
+
+## Vragen aan Grok
+
+1. **Hoe commenteer je makefile includes correct** zonder "missing separator" error?
+   Is `# include ...` geldig of moet het anders?
+
+2. **Wat is het juiste build target** voor een AOSP OTA package?
+   `m bacon` (LineageOS) -> `m otapackage`? `m target-files-package`? `m dist`?
+
+3. **Hoe los je het kernel probleem op** voor een pure AOSP build?
+   De tegu device tree heeft `device/google/tegu-kernels/6.1` nodig.
+   Moeten we prebuilt kernels downloaden? Of `TARGET_NO_KERNEL := true`?
+   Of `PRODUCT_OTA_ENFORCE_VINTF_KERNEL_REQUIREMENTS := false`?
+
+4. **Hoe verwijder je LineageOS dependencies** uit de device tree
+   zonder de build te breken? De zumapro common.mk heeft ~10 includes
+   van `hardware/google/pixel/*` die alleen in LineageOS bestaan.
+
+5. **Is er een betere aanpak**? Moeten we:
+   a. De LineageOS device tree blijven proberen te patchen?
+   b. Een eigen minimaal device tree schrijven voor tegu?
+   c. Een andere manifest branch gebruiken?
+   d. De Google-published AOSP device tree gebruiken (niet LineageOS)?
+
+## Onze environment
+```
+SSH: ssh9.vast.ai:37390 (root)
+Source: /workspace (41GB repo sync)
+Device: aosp_tegu-bp2a-userdebug
+Branch: android-16.0.0_r1
+```
+
+Geef ons een concreet, stap-voor-stap plan om deze build te voltooien.
+We hebben root access, 64 cores, 126GB RAM. We kunnen alles installeren.
+Het doel is een signed OTA zip die we kunnen flashen op een Pixel 9a.
