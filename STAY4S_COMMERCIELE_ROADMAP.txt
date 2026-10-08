@@ -1,0 +1,271 @@
+STAY4S COMMERCIELE ROADMAP - VAN PROJECT NAAR PLATFORM
+=====================================================
+
+WAT COMMERCIELER MOET WORDEN (TOP 5)
+-------------------------------------
+
+1. MOLLIE API KEY - LIVE BETALINGEN AANZETTEN (EUR 49-499/mnd per klant)
+   Nu: test mode, geen echte betalingen
+   Actie: Mollie account aanmaken, API key invullen in gateway
+   Potentieel: EUR 49-499 per maand per klant, schaalbaar tot duizenden
+
+2. API LANDING PAGE - www.stay4s.com/api MET PRIJZEN EN SIGNUP
+   Nu: hoofdpagina alleen info
+   Actie: Landingspagina met prijzen, features, signup, code examples
+   Potentieel: Conversie van bezoekers naar betalende klanten
+
+3. SUBSCRIBE FLOW - ZELF-SERVE KLANT AANNAME (signup -> betaling -> API key)
+   Nu: endpoint bestaat maar flow onvolledig
+   Actie: Signup -> Mollie checkout -> API key generation -> welcome email
+   Potentieel: Zelf-serve klant aanname, 24/7 signup zonder tussenkomst
+
+4. WHITE LABEL API - EUR 999/mnd VOOR PARTNERS
+   Nu: alleen stay4s.com branding
+   Actie: White label optie voor partners (eigen domein, eigen branding)
+   Potentieel: 5-10 partners = EUR 5K-10K/mnd herhalingsomzet
+
+5. SCAM SHIELD B2B - REAL-TIME SCANNING VOOR BANKEN/VERZEKERINGEN (EUR 0.10/scan)
+   Nu: alleen API endpoint
+   Actie: Real-time scanning voor bedrijven (SMS, email, WhatsApp, web)
+   Potentieel: Banken, verzekeringen, telecom = EUR 5K-50K/mnd
+
+REALISTISCHE JAAR 1 OMZET: EUR 19.000/MAAND
+
+=====================================================
+
+STAY4S COMMERCIEEL PLATFORM - MAAK HET AANTREKKELIJK
+=====================================================
+
+DOEL: Van een project naar een professioneel AI-platform dat
+konkurreert met Big Tech diensten, maar dan privacy-first, Nederlands
+en onafhankelijk.
+
+WAT WE TE BIEDEN HEBBEN (voor klanten)
+-------------------------------------
+
+A. AI API VOOR ONTWIKKELAARS
+   13 endpoints, direct te gebruiken, Nederlands + Engels
+   Geen Big Tech afhankelijkheid - je data blijft in Europa
+   Prijs: Free (gratis), Pro (EUR 49/mnd), Enterprise (EUR 499/mnd)
+   Signup: api.stay4s.com (zelf-serve, direct API key na betaling)
+
+B. SCAM SHIELD VOOR BEDRIJVEN
+   Real-time scam en phishing detectie voor SMS, email, WhatsApp
+   AI aangedreven, Nederlands geoptimaliseerd, batch API beschikbaar
+   Prijs: EUR 0.10 per scan, bulk tarieven vanaf 10K scans
+   Geschikt voor: banken, verzekeringen, telecom, e-commerce
+
+C. AI ASSISTENT VOOR CONSUMENTEN
+   Stay4S Companion app (PWA + Kotlin)
+   Chat, vertaling, samenvatting, scam detectie in je zak
+   Prijs: gratis basis, EUR 4.99/mnd premium
+   Platform: iPhone (Safari PWA), Android (apk), web
+
+D. WHATSAPP AI KLANTENSERVICE
+   AI klantenservice op WhatsApp voor MKB
+   Automatische FAQ, doorverwijzing, meertalig
+   Prijs: EUR 99/maand per bedrijf, setup binnen 1 uur
+   Geschikt voor: webshops, restaurants, kappers, kledingzaken
+
+E. CUSTOM AI MODEL TRAINING
+   Fine-tune ons model op jouw data, op jouw domein
+   Privacy-safe, lokale training, eigen model
+   Prijs: EUR 499 per model, levering binnen 48 uur
+   Geschikt voor: gemeentes, zorg, juridisch, financieel
+
+F. CUSTOM ROM BOUW
+   Degooglede Android ROM met Stay4S AI ingebouwd
+   Privacy-first, geen tracking, eigen AI assistent
+   Prijs: EUR 499 per build, per apparaat
+   Geschikt voor: privacy-bewuste gebruikers, bedrijven, overheden
+
+G. WHITE LABEL AI PLATFORM
+   Volledig Stay4S platform onder jouw merk
+   Eigen domein, eigen prijzen, eigen klanten
+   Prijs: EUR 999/maand, setup binnen 1 week
+   Geschikt voor: IT bedrijven, telecom providers, SaaS bedrijven
+
+HOE WE HET AANTREKKELIJK MAKEN
+------------------------------
+
+1. PROFESSIONELE WEBSITE
+   - www.stay4s.com als landingspagina met duidelijke waardepropositie
+   - Prijzenpagina met vergelijking tegen concurrenten
+   - Live demo zonder signup (gratis API key direct op de pagina)
+   - Klantverhalen en use cases
+   - Nederlandse en Engelse versie
+
+2. API DOCUMENTATIE
+   - Interactieve docs (Swagger/OpenAPI) op docs.stay4s.com
+   - Code examples in Python, JavaScript, PHP, curl
+   - Postman collection
+   - SDK voor Python en JavaScript
+   - Quick start guide (3 minuten tot eerste call)
+
+3. ZELF-SERVE SIGNUP
+   - Klant registreert op subscribe.stay4s.com
+   - Kiest tier (Free/Pro/Enterprise)
+   - Betaalt via Mollie (iDEAL, creditcard, bancontact)
+   - Krijgt direct API key per email
+   - Kan direct API calls maken
+   - Dashboard op dash.stay4s.com met usage stats
+
+4. MARKETING
+   - LinkedIn bedrijfspagina met wekelijkse posts
+   - GitHub open source repos voor developer outreach
+   - HuggingFace modellen voor AI community zichtbaarheid
+   - Product Hunt launch
+   - Nederlandse tech blogs en nieuwsbrieven
+   - Partner programma voor IT bedrijven (20% commissie)
+
+5. PARTNERSCHAPPEN
+   - Cloudflare (AI Workers, CDN, tunneling)
+   - Mollie (betalingen, Nederlandse focus)
+   - RunPod + Vast.ai (GPU training)
+   - Ollama (lokale model deployment)
+   - HuggingFace (model hosting)
+   - Potentiele telecom partners (KPN, T-Mobile voor Scam Shield)
+
+6. OPEN SOURCE STRATEGIE
+   - Core API gateway open source op GitHub
+   - Modellen open source op HuggingFace
+   - Community bijdragen verwelkomd
+   - Enterprise features betaald (white label, on-premise, SLA)
+
+MARKT KANSEN
+------------
+
+1. NEDERLANDSE AI SOEVEREINITEIT
+   Europa zoekt alternatieven voor OpenAI/Google/Microsoft
+   Stay4S biedt Nederlands, privacy-first, onafhankelijk
+   Doelgroep: overheidsinstanties, zorg, financieel, juridisch
+
+2. SCAM PREVENTIE WETGEVING
+   Europese regelgeving verplicht scam preventie
+   Banken en telecom moeten klanten beschermen
+   Stay4S Scam Shield: direct inzetbaar, Nederlands geoptimaliseerd
+   Markt: EUR 100M+ per jaar in Nederland alleen
+
+3. AI ASSISTENT MARKT
+   Consumenten willen AI assistent zonder Big Tech tracking
+   Stay4S Companion: onafhankelijk, Nederlands, gratis basis
+   Markt: miljoenen Nederlandse smartphone gebruikers
+
+4. WHATSAPP BUSINESS MARKT
+   9 miljoen Nederlandse WhatsApp gebruikers
+   MKB wil AI klantenservice maar het is te duur/complex
+   Stay4S: EUR 99/maand, setup in 1 uur, Nederlands
+   Markt: 500K+ Nederlandse MKB bedrijven
+
+5. CUSTOM ROM MARKT
+   Privacy-bewuste gebruikers zoeken degooglede ROMs
+   Stay4OS: enige Nederlandse custom ROM met AI ingebouwd
+   Niche markt maar loyaal en betalend
+   Doelgroep: 10K-50K gebruikers in Nederland/Europa
+
+6. AI TRAINING MARKT
+   Bedrijven willen eigen AI modellen maar het is complex
+   Stay4S: fine-tune service, EUR 499 per model, 48 uur levering
+   Geen data verlaat Europa, privacy gewaarborgd
+   Markt: EUR 50M+ per jaar in Nederland
+
+OPPORTUNITEITEN DIE WE NU HEBBEN
+--------------------------------
+
+A. EERSTE BETALENDE KLANT (deze week haalbaar)
+   - Mollie API key aanvragen (gratis, 1 werkdag)
+   - Subscribe flow activeren
+   - 1 proefklant aanmelden (zelf of via netwerk)
+   - Eerste EUR 49 verdiend
+
+B. PRODUCT HUNT LAUNCH (deze maand haalbaar)
+   - Product klaar: API met 13 endpoints, gratis tier
+   - Landing page klaar maken
+   - Product Hunt post schrijven
+   - Potentieel: 100-1000 gratis gebruikers, 5-10 betalend
+
+C. LINKEDIN CAMPAGNE (deze week haalbaar)
+   - Bedrijfspagina aanmaken voor Stay4S / Het Nieuwe Begin BV
+   - Post over "Soevereine Nederlandse AI API"
+   - Verbinden met Nederlandse tech community
+   - Potentieel: 50-200 leads
+
+D. GITHUB EXPOSURE (direct haalbaar)
+   - 57 repos, 15 HuggingFace modellen
+   - README verbeteren met duidelijke waardepropositie
+   - Issues open laten voor community bijdragen
+   - Potentieel: 10-50 GitHub stars, developer aandacht
+
+E. SCAM SHIELD PILOT (deze maand haalbaar)
+   - Scam Shield API is klaar en getest
+   - Benader 1 Nederlandse bank of telecom met pilot voorstel
+   - Gratis pilot voor 30 dagen, daarna EUR 0.10/scan
+   - Potentieel: EUR 5K-50K/maand bij succes
+
+F. AI TRAINING PILOT (deze maand haalbaar)
+   - Training infrastructuur is klaar (RunPod + Vast.ai)
+   - 25K+ training records beschikbaar
+   - Bied 1 gratis model fine-tune aan een lokaal bedrijf
+   - Potentieel: referentie klant + EUR 499+ per model
+
+G. WHITE LABEL PARTNER (deze maand haalbaar)
+   - White label API is technisch klaar
+   - Benader 1 IT bedrijf voor white label partnership
+   - Zij verkopen onder hun merk, Stay4S levert de techniek
+   - Potentieel: EUR 999/maand herhalingsomzet per partner
+
+HET PLAN - VAN PROEF NAAR PRODUCTIEM
+------------------------------------
+
+FASE 1: FOUNDATION (deze week)
+- Mollie API key aanvragen
+- Subscribe flow voltooien (signup -> betaling -> API key -> email)
+- API landing page bouwen (www.stay4s.com/api)
+- Interactieve API docs (docs.stay4s.com)
+- LinkedIn bedrijfspagina aanmaken
+
+FASE 2: LAUNCH (deze maand)
+- Product Hunt launch
+- LinkedIn campagne (wekelijkse posts)
+- GitHub READMEs professionaliseren
+- Eerste 3 betalende klanten werven
+- Scam Shield pilot bij 1 bedrijf
+- WhatsApp AI pilot bij 1 MKB bedrijf
+
+FASE 3: SCALE (volgende 3 maanden)
+- White label partner programma
+- StayLM model verbeteren (1.15B -> 3B)
+- Creator Studio prototype
+- 10-50 betalende klanten
+- EUR 5K-15K/maand herhalingsomzet
+- Enterprise klanten werven (EUR 499/maand)
+
+FASE 4: EXPANSION (6-12 maanden)
+- On-premise licentie product
+- Stay4OS ROM distributie
+- AI Smartphone prototype
+- 100+ betalende klanten
+- EUR 19K+/maand herhalingsomzet
+- Europese uitbreiding (Duitsland, Belgie)
+
+WAT MITCHELL NU MOET DOEN
+-------------------------
+
+1. MOLLIE ACCOUNT AANMAKEN
+   Ga naar mollie.com, registreer als bedrijf
+   Krijg API key (test + live)
+   Stuur API key naar mij (Droid) om in gateway te zetten
+
+2. GROK PROMPT KOPIEREN
+   Open GROK_AOSP_BUILD_PROMPT.txt
+   Plak in Grok voor AOSP build oplossingen
+
+3. LINKEDIN BEDRIJFSPAGINA
+   Maak LinkedIn pagina voor Stay4S / Het Nieuwe Begin BV
+   Verbind met Nederlandse tech community
+
+4. PI 5 FAN VERVANGEN
+   Voor zware workloads (training, builds) is koeling nodig
+
+ALLES ANDERS DOE IK AUTONOOM
+=============================
