@@ -1,0 +1,591 @@
+===============================================================================
+  STAY4S VOLLEDIG INVENTARIS - 8 oktober 2026 18:20
+  "Alles wat we hebben, wat we kunnen doen, welke links, wat commercieler moet"
+===============================================================================
+
+===============================================================================
+  DEEL 1: ALLES WAT WE HEBBEN
+===============================================================================
+
+-------------------------------------------------------------------------------
+1.1 INFRASTRUCTUUR
+-------------------------------------------------------------------------------
+
+PI 5 (192.168.2.21 / Tailscale: 100.123.235.81):
+- CPU: 47+ services actief
+- RAM: 7.9GB total, 5.3GB used, 2.5GB available
+- Temp: 59.3C (NU - was eerder 84.5C, fan defect, monitor nodig)
+- Disk: /mnt/usb4 115GB USB SSD, 41GB used, 69GB free
+- Swap: 2GB (1.2GB used)
+- Uptime: 2 dagen, 4.5 uur
+- Cloudflared: ACTIVE (36 routes)
+- Tailscale: connected
+
+PI 5 SERVICES (60+ poorten open):
+Poort  Service                    Status
+------  -------                   ------
+8080   Webhook                    OPEN
+8081   Dashboard                  OPEN
+8083   Vault E2EE                 OPEN
+8085   Content service             OPEN
+8087   RAG                        OPEN
+8090   MCP Server                 OPEN
+8091   Model Router               OPEN
+8093   Flywheel                   OPEN
+8095   Social Platform             OPEN
+8096   Voice Server               OPEN
+8097   Knowledge Graph            OPEN
+8098   Mesh Node                   OPEN
+8100   Scam Shield                 OPEN
+8103   Marketplace                 OPEN
+8104   Billing                     OPEN
+8120   DocGen                      OPEN
+8130   Gateway v2 (Commercial)    OPEN + LIVE
+8200   Messages Server             OPEN + LIVE
+11434  Ollama                     OPEN + 5 models
+8070-8099  Various AI services    OPEN
+8888   Proxy                      OPEN
+
+OLLAMA MODELS (5):
+1. stay4s-1b:latest - 1.7B Q4_K_M (eigen model - NOG IN TROUBLE)
+2. stay4s-1b-dream:latest - 1.7B dream variant
+3. llama3.2-vision:latest - 10.7B vision model (7.8GB)
+4. qwen2.5-coder:7b - 7B code model
+5. nomic-embed-text - embedding model
+
+-------------------------------------------------------------------------------
+1.2 CLOUD INFRASTRUCTUUR
+-------------------------------------------------------------------------------
+
+CLOUDFLARE:
+- Zone: stay4s.com (ACTIVE)
+- SSL: Flexible mode
+- 35 CNAME records
+- 36 tunnel routes (cloudflared)
+- 18+ subdomains LIVE (200)
+- 2 subdomains LIVE (404 - no page yet)
+- ~15 subdomains CHECK (need tunnel route or service)
+
+VAST.AI:
+- Instance 54732495: RTX 3080, 64 vCPU, 126GB RAM
+- Cost: $0.29/hr
+- Credit: $31.50 balance
+- Disk: 300GB (154GB used)
+- AOSP repo sync: 41GB
+- Qwen2.5-1.5B-Instruct: COMPLETE (3.09GB)
+- Agent training: RUNNING (step 553/4689, 2.14s/it, ~2.5h ETA)
+- AOSP build: FAILED (wacht op Grok)
+
+RUNPOD:
+- Pod i3uzchi45ylvou: stay4s-2b-train
+- GPU: RTX A6000, $0.53/hr
+- Uptime: 331,402s (~3.8 dagen)
+- Training: step 20600/50000 (41%)
+- Loss: 0.0255 (zeer goed)
+- Speed: 0.265 s/s
+- ETA: 30.8 uur
+- 8 checkpoints saved (cp-2500 tot cp-20000)
+- Post-training watcher: actief (auto GGUF + HuggingFace)
+- Volume: 100GB
+
+GITHUB (57 repositories):
+PUBLIC (25):
+- stay4s-platform (hoofdrepo, 30+ files)
+- stay4s-ai-board
+- Stay4S-WhatsApp-MVP
+- stay4os-tegu
+- Stay4S-System-Verslag
+- Stay4S-Factory
+- Stay4S-app
+- Stay4S-Pixel
+- Stay4S-LocationGuard
+- nothing-phone-3a-recovery
+- Connect4opem
+- android_device_nothing_asteroids
+- android_packages_apps_Grok
+- GrokPhone-OS
+- Stay4S-Intelligence
+- android_kernel_nothing_sm7635
+- Stay4Grok
+- Stay4s-grokrom
+- stay4s-grokphone-flexbank
+- device_nothing_asteroids
+- TermuxCyberArmy
+- + 4 meer
+
+PRIVATE (32):
+- Stay4OS-ROM
+- stay4companion
+- sage-giant-jolly-rocket
+- Stay4S-Messages
+- Stay4LM-train
+- gem-xenon-delta-mint
+- hetnieuwebeginbv-glitch (profile)
+- Stay4Compa-Mini
+- stay4os-docs
+- Stay4S-Nexus
+- Stay4S-hoofdagent
+- Stay4S-SAIP
+- mirror-carlyle-felix-android_kernel_nothing_sm7635
+- Stay4S-All
+- mirror-NullDebris-proprietary_vendor_nothing_asteroids
+- mirror-NullDebris-packages_apps_ParanoidGlyph
+- mirror-NullDebris-packages_apps_GlyphAdapter
+- mirror-NullDebris-hardware_dolby
+- mirror-carlyle-felix-android_kernel_nothing_sm7635-modules
+- mirror-carlyle-felix-android_kernel_nothing_sm7635-devicetrees
+- Stay4S-Agent
+- GrokPhone_Integrated
+- boss-worker-fleet
+- android_vendor_nothing_asteroids
+- android_packages_apps_AetherCore
+- repit-recovery
+- Drive-Recovery
+- Stay4S-Grok
+- Stay4S
+- stay4safe-ai
+- stay4s-grok-edition
+- M-Ai-Phone
+- echo-infinite-reality
+- Multiagent
+- ai-guard
+
+HUGGINGFACE (15 models, 2,787 downloads total):
+Model                              Downloads
+------                             ---------
+miesdevries/stay4s-14b-lora        633
+miesdevries/stay4s-7b-lora         475
+miesdevries/stay4s-lora-q8         277
+miesdevries/stay4s-foundation-1b   270
+miesdevries/stay4s-domein-agent    123
+miesdevries/stay4s-coder-agent    122
+miesdevries/stay4s-reken-agent    120
+miesdevries/stay4s-researcher-agent 120
+miesdevries/stay4s-unified-lora   125
+miesdevries/stay4s-8b-lora        108
+miesdevries/stay4s-domein-v2-q8   94
+miesdevries/stay4s-cyc6-q4        85
+miesdevries/stay4s-cyc7-q4        63
+miesdevries/stay4s-1b-base        13
+
+-------------------------------------------------------------------------------
+1.3 EIGEN AI MODELLLEN
+-------------------------------------------------------------------------------
+
+StayLM Model Lijn:
+1. StayLM-1B (stay4s-1b op Ollama) - 1.7B Q4_K_M - IN TROUBLE
+2. StayLM-1.15B (RunPod training) - step 20600/50000, 41% klaar
+3. StayLM-3B - gepland
+4. StayLM-14B c1 (miesdevries/stay4s-14b-lora) - 633 downloads
+5. StayLM-7B (miesdevries/stay4s-7b-lora) - 475 downloads
+
+Training Data:
+- agent_training_50k.jsonl (68MB, 50K records) - Pi 5, RunPod, Vast.ai
+- usable_training_25k.jsonl (7.3MB, 25K records) - Pi 5, RunPod, Vast.ai, K:, GitHub
+  Categories: math 7591, english 3961, dutch 3945, code 3802, reasoning 3768, tool_use 1933
+- all_data_combined_123k.jsonl (123K records) - RunPod
+- droid_conversations_sft.jsonl - RunPod
+
+K: DRIVE (8TB):
+- K:\stay4s - hoofdfolder
+- K:\stay4s\SESSION_20261008 - 188 files, 66.2 MB (vandaag gebackupped)
+- K:\STAY4S-BACKUP - backups, prompts, training data, models
+- K:\STAY4S-BACKUP\HUGGINGFACE-MODELS - model cache
+- K:\STAY4S-BACKUP\HUGGINGFACE-CACHE - HF cache
+- K:\STAY4S-BACKUP\TRAINING-CYCLUS3 - training cyclus data
+- K:\STAY4S-BACKUP\SESSION-STATE - sessie states
+- K:\STAY4S-BACKUP\PC-BACKUP - PC backup
+- 435GB gebruikt, 7TB vrij
+
+===============================================================================
+  DEEL 2: WAT KUNNEN WE NU DOEN EN WAAR
+===============================================================================
+
+-------------------------------------------------------------------------------
+2.1 WAT WERKT NU (LIVE en bruikbaar)
+-------------------------------------------------------------------------------
+
+COMMERCELE API (Gateway v2 op poort 8130):
+- POST /v1/chat - AI chat (Ollama + Cloudflare Llama 3.3 70B)
+- POST /v1/translate - Vertaling NL<->EN (Llama 3.3 70B) - GEFIXT
+- POST /v1/scan - Scam/phishing detectie
+- POST /v1/summarize - Tekst samenvatten
+- POST /v1/agents - AI agents (15 tools)
+- GET /pricing - Prijzen (Free/Pro/Enterprise)
+- GET /docs - API documentatie
+- POST /customers/create - Klant aanmaken - GEFIXT
+- GET /customers - Klant overzicht
+- GET /admin/usage - Gebruik analytics
+- GET /admin/revenue - Omzet overzicht
+- POST /subscribe - Abonnement via Mollie
+- GET /health - Health check
+
+MESSAGING PLATFORM (poort 8200):
+- Registratie + login (SQLite)
+- Contacten beheren
+- Real-time chat via WebSocket
+- Stay4S AI als contact
+- PWA voor iPhone (companion.stay4s.com)
+- Kotlin app voor Pixel (Stay4Companion_v5_Messages.kt)
+
+ANDERE LIVE SERVICES:
+- SearXNG (search.stay4s.com) - Zoekmachine
+- Social Platform (social.stay4s.com)
+- AI Browser (browser.stay4s.com)
+- Bot Creator (bot.stay4s.com)
+- Monitor (monitor.stay4s.com)
+- Dashboard (dash.stay4s.com)
+- Companion (companion.stay4s.com) - Messages PWA
+
+-------------------------------------------------------------------------------
+2.2 WAT WE NU KUNNEN DOEN
+-------------------------------------------------------------------------------
+
+DIRECT DOEN (vanavond/nacht):
+1. Grok prompt kopieren naar Grok -> AOSP build fix krijgen
+2. RunPod training laten doorlopen (30.8h autonoom)
+3. Vast.ai training laat doorlopen (~2.5h autonoom)
+4. API abonnementen verkopen via pay.stay4s.com
+5. API key aanmaken voor betaalde klant via gateway
+6. Nieuwe training data genereren met gen_usable_data_v2.py
+7. Pi 5 fan vervangen (temperatuur monitoring)
+
+DEZE WEEK:
+1. AOSP build herstarten met Grok's oplossingen
+2. RunPod training afronden (step 50000) -> auto GGUF -> HuggingFace
+3. Vast.ai training afronden -> nieuw stay4s model
+4. Nieuw model deployen op Pi 5 Ollama
+5. Subdomain pagina's bouwen voor 404/Check subdomains
+6. Mollie betalingen activeren voor echte klanten
+7. API marketing pagina bouwen (www.stay4s.com/api)
+
+DEZE MAAND:
+1. StayLM-3B trainen
+2. Nexus orchestration bouwen
+3. Creator Studio prototypen
+4. Scam Shield uitbreiden (real-time SMS/WhatsApp scanning)
+5. White-label API voor partners
+6. Nothing Phone 3a ROM build
+7. Enterprise API klanten werven
+
+-------------------------------------------------------------------------------
+2.3 WAAR - LOCATIE OVERZICHT
+===============================================================================
+
+Wat                    Waar                          Hoe toegankelijk
+---                    ----                          ---------------
+Gateway v2             Pi 5 :8130                    api.stay4s.com / billing.stay4s.com
+Messages               Pi 5 :8200                    companion.stay4s.com
+Ollama AI              Pi 5 :11434                   192.168.2.21:11434 (lokaal)
+Scam Shield            Pi 5 :8100                    safe.stay4s.com
+Social Platform        Pi 5 :8095                    social.stay4s.com
+SearXNG                Pi 5 :8081                    search.stay4s.com
+MCP Server             Pi 5 :8090                    api.stay4s.com/mcp
+Model Router           Pi 5 :8091                    (intern)
+Knowledge Graph        Pi 5 :8097                    (intern)
+RAG                    Pi 5 :8087                    (intern)
+Vault E2EE             Pi 5 :8083                    vault.stay4s.com
+RunPod training        RunPod cloud                  SSH 194.68.245.70:22194
+Vast.ai training       Vast.ai cloud                 SSH ssh9.vast.ai:37390
+AOSP build             Vast.ai cloud                 SSH ssh9.vast.ai:37390
+GitHub                 github.com/hetnieuwebeginbv-glitch
+HuggingFace            huggingface.co/miesdevries
+K: drive               Lokale 8TB USB               K:\stay4s
+
+===============================================================================
+  DEEL 3: ALLE LINKS
+===============================================================================
+
+-------------------------------------------------------------------------------
+3.1 LIVE WEBSITES (HTTPS)
+-------------------------------------------------------------------------------
+
+HOOFDSITE:
+- https://www.stay4s.com - Hoofdpagina (LIVE)
+- https://stay4s.com - Zelfde als www
+
+COMMERCEEL:
+- https://billing.stay4s.com - Commercial Gateway (LIVE 200)
+- https://docs.stay4s.com - API documentatie (LIVE 200)
+- https://pay.stay4s.com - Betalingen (LIVE 200)
+- https://api-dir.stay4s.com - API directory (LIVE 200)
+
+AI SERVICES:
+- https://agent.stay4s.com - Agent Platform (LIVE 200)
+- https://bot.stay4s.com - Bot Creator (LIVE 200)
+- https://browser.stay4s.com - AI Browser (LIVE 200)
+- https://code.stay4s.com - Code assistent (LIVE 200)
+- https://translate.stay4s.com - Vertaling (CHECK)
+- https://summary.stay4s.com - Samenvatten (LIVE 200)
+
+PLATFORM:
+- https://social.stay4s.com - Social Platform (LIVE 200)
+- https://companion.stay4s.com - Messages PWA (LIVE 200)
+- https://dash.stay4s.com - Dashboard (LIVE 200)
+- https://monitor.stay4s.com - Monitor (LIVE 200)
+- https://search.stay4s.com - SearXNG (LIVE 200)
+- https://content.stay4s.com - Content (LIVE 200)
+
+VEILIGHEID:
+- https://safe.stay4s.com - Scam Shield (CHECK)
+- https://vault.stay4s.com - E2EE Vault (CHECK)
+- https://review.stay4s.com - Review (LIVE 200)
+
+OVERIGE:
+- https://whatsapp.stay4s.com - WhatsApp service (LIVE 200)
+- https://email.stay4s.com - Email service (LIVE 200)
+- https://notify.stay4s.com - Notificaties (LIVE 200)
+- https://cloud.stay4s.com - Cloud (LIVE 200)
+- https://data.stay4s.com - Data (CHECK)
+- https://feeling.stay4s.com - Feeling (CHECK)
+- https://find.stay4s.com - Find (CHECK)
+- https://schedule.stay4s.com - Schedule (CHECK)
+- https://subscribe.stay4s.com - Subscribe (CHECK)
+- https://admin.stay4s.com - Admin (CHECK)
+- https://api.stay4s.com - API (CHECK)
+- https://chat.stay4s.com - Chat (CHECK)
+- https://compa.stay4s.com - Companion (CHECK)
+- https://autoconfig.stay4s.com - Email autoconfig (404)
+- https://backend.stay4s.com - Backend (404)
+- https://bot.stay4s.com - Bot (LIVE 200)
+
+-------------------------------------------------------------------------------
+3.2 GITHUB LINKS
+-------------------------------------------------------------------------------
+
+https://github.com/hetnieuwebeginbv-glitch
+- 57 repositories (25 public, 32 private)
+- Hoofdrepo: stay4s-platform (commercial platform)
+- AI repos: Stay4S-Nexus, Stay4S-SAIP, Stay4S-Intelligence, Stay4S-Agent
+- Training: Stay4LM-train, boss-worker-fleet
+- Android: Stay4OS-ROM, stay4os-tegu, stay4companion
+- AOSP: android_device_nothing_asteroids, android_kernel_nothing_sm7635
+- Grok: GrokPhone-OS, android_packages_apps_Grok, Stay4Grok
+
+-------------------------------------------------------------------------------
+3.3 HUGGINGFACE LINKS
+-------------------------------------------------------------------------------
+
+https://huggingface.co/miesdevries
+- 15 models, 2,787 downloads total
+- Top: stay4s-14b-lora (633 dl), stay4s-7b-lora (475 dl)
+- Agents: coder, reken, summarizer, researcher, domein
+- Foundation: stay4s-foundation-1b (270 dl), stay4s-1b-base (13 dl)
+
+-------------------------------------------------------------------------------
+3.4 EXTERNE DIENSTEN
+-------------------------------------------------------------------------------
+
+Cloudflare:
+- Dashboard: https://dash.cloudflare.com
+- Zone: stay4s.com (ID: 76b0029f5744d8b62e892ebcdcb40431)
+- API token in config files (YOUR_CF_API_TOKEN placeholder)
+
+Vast.ai:
+- Console: https://vast.ai
+- Instance 54732495: SSH ssh9.vast.ai:37390
+- Credit: $31.50
+
+RunPod:
+- Console: https://www.runpod.io
+- Pod i3ciuzchi45ylvou (stay4s-2b-train)
+- SSH: 194.68.245.70:22194
+- Cost: $0.53/hr
+
+Mollie:
+- Betalingen via gateway /subscribe endpoint
+- API key nodig voor live betalingen
+
+===============================================================================
+  DEEL 4: WAT MOET NOG COMMERCIELER WORDEN
+===============================================================================
+
+-------------------------------------------------------------------------------
+4.1 WAT NU COMMERCIEEL KLAAR IS
+-------------------------------------------------------------------------------
+
+1. API GATEWAY v2 (billing.stay4s.com)
+   Status: WERKT, kan betalende klanten aannemen
+   Prijsmodel: Free (EUR 0), Pro (EUR 49/mnd), Enterprise (EUR 499/mnd)
+   Betaling: Mollie integratie klaar (API key nodig voor live)
+   Wat ontbreekt: Echte Mollie API key, landing page, marketing
+
+2. SCAM DETECTION (safe.stay4s.com)
+   Status: Endpoint werkt, 2 calls geregistreerd
+   Prijsmodel: EUR 0.10 per scan
+   Wat ontbreekt: Premiumpagina, API key per klant, bulk tarieven
+
+3. TRANSLATION (translate.stay4s.com)
+   Status: Endpoint werkt via Llama 3.3 70B
+   Prijsmodel: EUR 0.05 per vertaling
+   Wat ontbreekt: Premiumpagina, batch API, vertaling geschiedenis
+
+4. SUMMARIZATION (summary.stay4s.com)
+   Status: Endpoint werkt
+   Prijsmodel: EUR 0.05 per samenvatting
+   Wat ontbreekt: Premiumpagina, batch API
+
+5. AI CHAT (chat.stay4s.com)
+   Status: Endpoint werkt (Ollama + Cloudflare fallback)
+   Prijsmodel: EUR 0.01 per chat (Free tier), EUR 0.005 (Pro)
+   Wat ontbreekt: Premiumpagina, rate limiting per tier, chat geschiedenis
+
+6. AGENTS (agent.stay4s.com)
+   Status: Endpoint werkt, 15 tools
+   Prijsmodel: EUR 0.02 per agent call
+   Wat ontbreekt: Agent templates, custom agent builder, SLA
+
+7. COMPANION APP (companion.stay4s.com)
+   Status: PWA LIVE op iPhone + Pixel
+   Prijsmodel: Freemium (basis gratis, premium EUR 4.99/mnd)
+   Wat ontbreekt: In-app purchases, premium features, push notificaties
+
+-------------------------------------------------------------------------------
+4.2 WAT NOG COMMERCIELER MOET WORDEN
+-------------------------------------------------------------------------------
+
+DIRECT (deze week):
+1. MOLLIE API KEY - Live betalingen aanzetten
+   Nu: test mode, geen echte betalingen
+   Actie: Mollie account aanmaken, API key invullen in gateway
+   Potentieel: EUR 49-499 per maand per klant
+
+2. API LANDING PAGE - www.stay4s.com/api
+   Nu: hoofdpagina alleen info
+   Actie: Landingspagina met prijzen, features, signup
+   Potentieel: Conversie van bezoekers naar betalende klanten
+
+3. SUBSCRIBE FLOW - subscribe.stay4s.com
+   Nu: endpoint bestaat maar flow onvolledig
+   Actie: Signup -> Mollie checkout -> API key generation -> welcome email
+   Potentieel: Zelf-serve klant aanname
+
+4. USAGE BILLING - pay.stay4s.com
+   Nu: usage tracking aan, maar geen automatische facturatie
+   Actie: Maandelijkse facturatie op basis van usage data
+   Potentieel: Terugkerende omzet
+
+5. API DOCUMENTATIE - docs.stay4s.com
+   Nu: basis pagina aanwezig
+   Actie: Interactieve API docs (Swagger/OpenAPI), code examples, SDKs
+   Potentieel: Makkelijker voor developers om te adopteren
+
+KORTE TERMIJN (deze maand):
+6. WHITE LABEL API
+   Nu: alleen stay4s.com branding
+   Actie: White label optie voor partners (eigen domein, eigen branding)
+   Prijs: EUR 999/mnd
+   Potentieel: 5-10 partners = EUR 5K-10K/mnd
+
+7. SCAM SHIELD B2B
+   Nu: alleen API endpoint
+   Actie: Real-time scanning voor bedrijven (SMS, email, WhatsApp)
+   Prijs: EUR 0.10 per scan, bulk tarieven
+   Potentieel: Banken, verzekeringen, telecom = EUR 5K-50K/mnd
+
+8. AI ASSISTENT ABONNEMENT
+   Nu: alleen API
+   Actie: Consumer abonnement (companion.stay4s.com premium)
+   Prijs: EUR 4.99/mnd of EUR 49/jaar
+   Potentieel: 1000 gebruikers = EUR 5K/mnd
+
+9. CUSTOM MODEL FINE-TUNE
+   Nu: training infrastructuur klaar
+   Actie: Fine-tune service voor bedrijven (eigen AI op hun data)
+   Prijs: EUR 499 per model
+   Potentieel: 10 klanten/mnd = EUR 5K/mnd
+
+10. TRAINING DATA VERKOOP
+    Nu: 123K+ records, 25K nieuwe
+    Actie: Data marketplace (privacy-gefilterde, gelicentieerde data)
+    Prijs: EUR 0.50 per record
+    Potentieel: EUR 5K-50K per dataset
+
+LANGERE TERMIJN (3-6 maanden):
+11. ON-PREMISE LICENTIE
+    Nu: alleen cloud API
+    Actie: Stay4S software package voor on-premise installatie
+    Prijs: EUR 4999 eenmalig + EUR 499/mnd support
+    Potentieel: EUR 50K+ per klant
+
+12. CONSULTING / IMPLEMENTATIE
+    Nu: alleen product
+    Actie: AI implementatie consulting voor bedrijven
+    Prijs: EUR 150/uur
+    Potentieel: EUR 10K-50K per project
+
+13. MARKETPLACE (marketplace.stay4s.com :8103)
+    Nu: service draait op Pi 5
+    Actie: AI agents, tools, en modellen marktplaats
+    Prijs: 20% commissie per transactie
+    Potentieel: EUR 5K-20K/mnd
+
+14. VOICE AI (voice.stay4s.com :8096)
+    Nu: service draait op Pi 5
+    Actie: Voice assistant voor zakelijk gebruik (telefoon support)
+    Prijs: EUR 0.05 per minuut
+    Potentieel: EUR 10K-50K/mnd
+
+15. AI SMARTPHONE (Stay4OS)
+    Nu: ROM in ontwikkeling, bootloop op Pixel 9a
+    Actie: Werkende ROM met Stay4S AI ingebouwd
+    Prijs: Hardware + software bundel
+    Potentieel: EUR 500-1000 per toestel
+
+-------------------------------------------------------------------------------
+4.3 REVENUE PROJECTION
+-------------------------------------------------------------------------------
+
+Bron                    Min/maand    Max/maand    Realistisch (jaar 1)
+----                    ---------    ---------    -------------------
+API abonnementen        EUR 490      EUR 49,900   EUR 5,000
+Per-call betalingen     EUR 50       EUR 5,000    EUR 500
+White label             EUR 999      EUR 9,990    EUR 2,000
+Scam Shield B2B         EUR 500      EUR 50,000   EUR 3,000
+AI Assistent            EUR 250      EUR 25,000   EUR 1,500
+Custom fine-tune        EUR 500      EUR 5,000    EUR 1,000
+Training data           EUR 500      EUR 50,000   EUR 1,000
+On-premise licentie     EUR 0        EUR 50,000   EUR 2,000
+Consulting              EUR 0        EUR 50,000   EUR 1,500
+Marketplace             EUR 0        EUR 20,000   EUR 500
+Voice AI                EUR 0        EUR 50,000   EUR 1,000
+AI Smartphone          EUR 0        EUR 100,000  EUR 0 (niet klaar)
+                                                  --------
+                                                  TOTAAL: EUR 19,000/mnd
+
+===============================================================================
+  DEEL 5: ACTIE PLAN - WAT NU?
+===============================================================================
+
+PRIORITY 1 - VANAVOND (autonoom):
+[X] RunPod training: step 20600/50000, 30.8h te gaan (autonoom)
+[X] Vast.ai training: gestart! step 553/4689, ~2.5h te gaan (autonoom)
+[X] Model.safetensors upload: COMPLETE (3.09GB exact)
+[X] Grok prompt: klaar op GitHub + PC (kopieer naar Grok)
+[X] Rapportage: geschreven, opgeslagen op K:, GitHub
+
+PRIORITY 2 - DEZE WEEK:
+[ ] AOSP build: Grok oplossingen toepassen, build herstarten
+[ ] RunPod training afronden: step 50000 -> GGUF -> HuggingFace -> Pi 5
+[ ] Vast.ai training afronden: nieuw model -> GGUF -> Pi 5
+[ ] stay4s-1b vervangen door beter model
+[ ] Mollie API key aanvragen -> live betalingen aanzetten
+[ ] API landing page bouwen (www.stay4s.com/api)
+[ ] Subscribe flow voltooien
+[ ] Pi 5 fan vervangen (voordat zware workloads)
+
+PRIORITY 3 - DEZE MAAND:
+[ ] White label API voor partners
+[ ] Scam Shield B2B uitrollen
+[ ] AI Assistent abonnement (companion premium)
+[ ] Custom fine-tune service lanceren
+[ ] StayLM-3B trainen
+[ ] Nexus orchestration bouwen
+[ ] Nothing Phone 3a ROM
+[ ] Eerste betalende klanten werven
+
+===============================================================================
+  EINDE INVENTARIS
+  Stay4S AI Ecosysteem - 8 oktober 2026
+  Gegenereerd door Droid AI
+===============================================================================
