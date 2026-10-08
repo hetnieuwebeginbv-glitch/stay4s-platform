@@ -1,0 +1,286 @@
+===============================================================================
+  STAY4S SUPER RAPPORTAGE - 8 OKTOBER 2026
+  Volledig overzicht van alle werk, beslissingen, infrastructuur en status
+===============================================================================
+
+## 1. PROJECT OVERZICHT
+Stay4S is een autonoom AI-platform gebouwd door Mitchell (Het Nieuwe Begin BV)
+met Droid AI assistent. Het platform draait op een Raspberry Pi 5 met
+Cloudflare tunnels voor externe toegang. Doel: een onafhankelijke, privacy-eerst
+AI-assistent die concurreert met Big Tech diensten.
+
+## 2. INFRASTRUCTUUR STATUS
+
+### Pi 5 (192.168.2.21 / Tailscale: 100.123.235.81)
+- OS: Debian/Ubuntu ARM64
+- CPU: 47 services actief
+- Temperatuur: 60.9°C (normaal)
+- Opslag: /mnt/usb4 (USB SSD)
+
+### Services op Pi 5:
+- Gateway v2 (poort 8130) - COMMERciele API met 13 endpoints
+- Message Server (poort 8200) - Stay4S Messages met WebSocket
+- Ollama (poort 11434) - 5 modellen lokaal
+- Cloudflared tunnel - 36 routes, 14+ subdomains LIVE
+
+### Ollama Modellen:
+1. stay4s-1b:latest - 1.7B Q4_K_M (eigen model, NOG IN TROUBLE)
+2. stay4s-1b-dream:latest - 1.7B dream variant
+3. llama3.2-vision:latest - 7.8B vision model
+4. qwen2.5-coder:7b - 7B code model
+5. nomic-embed-text - embedding model
+
+### Cloudflare:
+- Zone: stay4s.com (ACTIVE)
+- SSL: Flexible mode (gefixt van Full)
+- 35 CNAME records (ALLE subdomains hebben DNS)
+- 36 tunnel routes
+- 14+ subdomains LIVE: www, companion, social, schedule, code, agent,
+  monitor, summary, content, safe, vault, pay, translate, find, chat,
+  billing, bot, admin, docs, review, dash, subscribe
+- 4 subdomains propagating: docs, review, dash, subscribe
+
+### Vast.ai:
+- Instance 54732495: RTX 3080, 64 vCPU, 126GB RAM, $0.29/hr
+- AOSP repo sync klaar (41GB)
+- AOSP build: GEFAALD (4 errors, wacht op Grok)
+- Agent training: GEFOKKED door HuggingFace blokkade + incomplete model upload
+
+### RunPod:
+- Pod i3uzchi45ylvou: stay4s-2b-train
+- GPU: RTX A6000, $0.53/hr
+- Uptime: 326911 seconden (~3.8 dagen)
+- Training: step 9300/50000, loss 0.0613, ETA 42.7h
+- Auto GGUF + HuggingFace push bij step 50000
+
+### GitHub:
+- Repo: hetnieuwebeginbv-glitch/stay4s-platform
+- 25+ bestanden gepusht (commit 56144ea)
+- Master = origin/master (gesynchroniseerd)
+
+### HuggingFace:
+- 15 repos, 2.786 downloads
+
+## 3. COMMERCIELE PLATFORM (Gateway v2)
+
+### 13 API Endpoints:
+1. POST /v1/chat - AI chat (Ollama + Cloudflare Llama 3.3 70B fallback)
+2. POST /v1/translate - Vertaling (Llama 3.3 70B, GEFIXT van m2m100)
+3. POST /v1/scan - Scam/phishing detectie
+4. POST /v1/summarize - Tekst samenvatten
+5. POST /v1/agents - AI agents (15 tools)
+6. GET /pricing - Prijzen weergeven
+7. GET /docs - API documentatie
+8. POST /customers/create - Klant aanmaken (GEFIXT: UNIQUE constraint)
+9. GET /customers - Klant overzicht
+10. GET /admin/usage - Gebruik analytics
+11. GET /admin/revenue - Omzet overzicht
+12. POST /subscribe - Abonnement via Mollie
+13. GET /health - Health check
+
+### Prijzen:
+- Free: EUR 0/maand (100 calls, basis AI)
+- Pro: EUR 49/maand (10K calls, alle endpoints)
+- Enterprise: EUR 499/maand (100K calls, priority, custom AI)
+
+### Revenue Tracking:
+- 16 API calls geregistreerd
+- EUR 0.05 gegenereerd (eerste test call)
+- Breakdown: chat 5, translate 3, scan 2, agents 2, summarize 1
+
+## 4. STAY4S MESSAGES PLATFORM
+
+### Features:
+- Registratie + login (SQLite)
+- Contacten beheren
+- Real-time chat via WebSocket
+- Stay4S AI als contact (Ollama primary, Cloudflare fallback)
+- PWA voor iPhone (companion.stay4s.com)
+- Kotlin app voor Pixel (Stay4Companion_v5_Messages.kt)
+
+### Database:
+- Locatie: /mnt/usb4/stay4s_messages.db
+- Tabellen: users, contacts, messages
+
+## 5. AOSP BUILD STATUS
+
+### Doel:
+- Pure AOSP 16 voor Pixel 9a (geen Google apps)
+- Gebouwd op Vast.ai RTX 3080 instance
+
+### 4 kritieke errors (wacht op Grok):
+1. "unknown target 'bacon'" - LineageOS-specifiek doel, niet in AOSP
+   Fix nodig: m otapackage of m target-files-package
+2. "missing separator" in common.mk - sed commenting maakte "# include"
+   dat ongeldig is in makefile
+3. Missing kernel - geen kernel source in AOSP tree
+   Fix nodig: prebuilt kernel of TARGET_NO_KERNEL=true
+4. trunk_staging panic - TARGET_RELEASE niet gezet
+   Fix: TARGET_RELEASE=bp2a (deels gefixt)
+
+### Grok Super Prompt:
+- Bestand: GROK_AOSP_BUILD_PROMPT.txt (4.6KB)
+- Op GitHub gepusht (commit 56144ea)
+- Bevat alle 4 errors + 5 vragen voor Grok
+
+### Build scripts:
+- aosp_build_v13.sh tot aosp_build_v18.sh (iteratief gefixt)
+- Elke versie fixt 1 error maar onthult de volgende
+
+## 6. AGENT TRAINING
+
+### Training Data:
+- agent_training_50k.jsonl (68MB, 50K records)
+- 15 tools, Nederlands + Engels
+- Genereer script: gen_agent_data_v3.py
+
+### RunPod Training:
+- Model: Qwen2.5-1.5B met LoRA + 4-bit quantisatie
+- Step: 9300/50000 (18.6% voltooid)
+- Loss: 0.0613 (goed, convergeert)
+- ETA: 42.7 uur
+- Auto: GGUF conversie + HuggingFace push bij voltooiing
+
+### Vast.ai Agent Training:
+- GEFOKKED: HuggingFace niet bereikbaar (netwerkrestricties)
+- Model handmatig geupload (Qwen2.5-1.5B, 3GB)
+- model.safetensors INCOMPLEET (2.11GB van 3.09GB)
+- Her-upload nodig
+
+## 7. REVENUE MODEL (10 STREAMS)
+
+Document: STAY4S_VERDIENMODELLEN.md (6.5KB)
+
+1. API toegang (EUR 49-499/maand per klant)
+2. AI Assistent abonnement (EUR 9.99/maand)
+3. Scam detectie (EUR 0.10 per scan)
+4. Vertaling (EUR 0.05 per vertaling)
+5. Samenvatten (EUR 0.05 per samenvatting)
+6. White label (EUR 999/maand)
+7. On-premise licentie (EUR 4999 eenmalig)
+8. Training data verkoop (EUR 0.50 per record)
+9. Custom model fine-tune (EUR 499 per model)
+10. Consulting (EUR 150/uur)
+
+Potentieel: EUR 15K-163K/maand bij schaal
+
+## 8. ALLE FIXES UITGEVOERD
+
+### Cloudflare SSL (GEFIXT):
+- Probleem: SSL handshake failure (mode "full")
+- Fix: SSL mode veranderd naar "flexible"
+- Resultaat: 14+ subdomains LIVE via HTTPS
+
+### Cloudflared YAML (GEFIXT):
+- Probleem: Verkeerde inspringing na nieuwe routes
+- Fix: YAML herbouwd met correcte nesting
+- Resultaat: 36 routes, cloudflared actief
+
+### Vast.ai CDI Error (GEFIXT):
+- Probleem: OCI runtime CDI device error op instance 54698962
+- Fix: Instance vernietigd, nieuwe instance 54732495 gemaakt
+
+### Vast.ai HuggingFace Blocked (GEDEELTELIJK GEFIXT):
+- Probleem: Kan huggingface.co niet bereiken
+- Fix: Model handmatig gedownload op PC, geupload via scp
+
+### Vast.ai transformers import (GEFIXT):
+- Probleem: v5.19.0 had GenerationMixin import issue
+- Fix: Downgraded naar v4.57.6
+
+### Vast.ai pip resolver (GEFIXT):
+- Probleem: AssertionError in pip
+- Fix: pip geupgrade naar v26.2.1
+
+### AOSP HTTP 429 (GEFIXT):
+- Probleem: Rate limit bij repo sync met -j64
+- Fix: -j4 gebruikt
+
+### AOSP trunk_staging (GEFIXT):
+- Probleem: Missing release config
+- Fix: TARGET_RELEASE=bp2a gezet
+
+### AOSP lineage_health (GEFIXT):
+- Probleem: Android.mk blocked door AOSP 16 denylist
+- Fix: Directory verwijderd
+
+### Gateway Translation (GEFIXT):
+- Probleem: m2m100 "No route for that URI"
+- Fix: Vervangen door Llama 3.3 70B via Cloudflare Workers AI
+- Test: "Het is vandaag mooi weer" -> "The weather is nice today" PASS
+
+### Gateway Customer Create (GEFIXT):
+- Probleem: sqlite3.IntegrityError UNIQUE constraint op dubbele email
+- Fix: try/except toegevoegd
+- Oude gateway v1 service gestopt + uitgeschakeld
+- Gateway v2 nu draaiend op poort 8130
+- Test: klant5@test.nl succesvol aangemaakt (customer_id:2, tier:pro)
+
+### UFW Firewall (GEFIXT):
+- Probleem: 192.168.2.0/24 niet in UFW allow
+- Fix: 8 regels toegevoegd voor poorten 8200, 8130, 11434, 8070, 8071, 8095, 8081, 8082
+
+### GitHub Push Protection (GEFIXT):
+- Probleem: Cloudflare token in commit
+- Fix: Token vervangen door YOUR_CF_API_TOKEN, commit amended, gepusht
+
+## 9. STAY4S-1B MODEL STATUS: IN TROUBLE
+
+### Test resultaten:
+- Math "Hoeveel is 15 plus 27?" -> "Waarom?" (FOUT, incoherent)
+- Laadtijd: 26.6 seconden (TRAAG)
+- Model: 1.7B Q4_K_M quantisatie
+
+### Oorzaak:
+- Model te zwak (1.7B parameters, Q4 quantisatie)
+- Training data kwaliteit onvoldoende
+- Fine-tune op RunPod moet nog klaar zijn (42.7h)
+
+### Oplossing:
+1. Wachten op RunPod 1.15B training (step 9300/50000, ETA 42.7h)
+2. Nieuwe hoogkwalitatieve training data genereren (actie 3)
+3. Tijdelijk groter model gebruiken (llama3.2-vision 7.8B)
+
+## 10. ALLE BESTANDEN
+
+### C:\Users\Gebruiker (laatste 2 dagen):
+- gateway_v2.py (29KB) - Commerciele gateway met 13 endpoints
+- stay4s_messages_server.py (27KB) - Messages platform
+- bot_creator.py (28KB) - Bot maker
+- computer_use_agent_v2.py (25KB) - Computer use agent
+- gen_mega_data.py (23KB) - Data generator
+- gen_agent_data_v3.py (8KB) - 50K records generator
+- stay4s_companion_pwa.html (16KB) - iPhone PWA
+- api_docs.html (12KB) - API documentatie
+- Stay4Companion_v5_Messages.kt (11KB) - Kotlin app
+- GROK_AOSP_BUILD_PROMPT.txt (5KB) - Grok super prompt
+- STAY4S_VERDIENMODELLEN.md (7KB) - Revenue model
+- agent_training_50k.jsonl (68MB) - Training data
+- aosp_build_v13.sh tot v18.sh - AOSP build scripts
+- 180+ Python scripts totaal
+
+### Pi 5 (/mnt/usb4/):
+- gateway_v2.py - draaiend op poort 8130
+- stay4s_messages_server.py - draaiend op poort 8200
+- agent_training_50k.jsonl - 50K training records
+- stay4s_messages.db - SQLite database
+
+### GitHub (stay4s-platform repo):
+- 25+ bestanden gepusht
+- Laatste commit: 56144ea (Grok super prompt)
+
+## 11. VOLGENDE STAPPEN
+
+1. Grok prompt kopieren -> Grok om AOSP fixes te krijgen
+2. AOSP build herstarten met Grok's oplossingen
+3. RunPod training laten doorlopen (42.7h tot voltooiing)
+4. Nieuwe training data genereren + uploaden
+5. Model.safetensors her-uploaden naar Vast.ai
+6. Stay4S-1b verbeteren na RunPod training voltooid
+7. Subdomains controleren (docs, review, dash, subscribe propagating)
+8. Commerciele platform promoten (betaalde API abonnementen)
+
+===============================================================================
+  EINDE RAPPORTAGE - Stay4S Platform 8 Oktober 2026
+  Gegenereerd door Droid AI
+===============================================================================
