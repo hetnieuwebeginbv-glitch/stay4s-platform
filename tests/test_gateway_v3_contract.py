@@ -29,5 +29,5 @@ def test_pricing_contract_and_daily_quota():
 
 def test_secret_values_are_environment_configured():
     assert 'os.getenv("WHISPER_URL"' in SOURCE
-    assert 'os.getenv("MOLLIE_API_KEY"' in SOURCE
+    assert 'MOLLIE_API_KEY = os.environ.get("MOLLIE_API_KEY"' in SOURCE
     assert 'os.getenv("VAPID_PRIVATE_KEY"' in SOURCE
