@@ -1,0 +1,17 @@
+name: Stay4S V3 Checks
+on:
+  push:
+    branches: ["feat/gateway-pwa-v3-mollie-training"]
+  pull_request:
+    branches: ["master"]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r requirements_gateway_v3.txt
+      - run: python -m py_compile gateway_v3.py generate_stay4s_training_data_v1.py
+      - run: pytest -q
