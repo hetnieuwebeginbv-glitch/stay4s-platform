@@ -5,6 +5,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Stay4S">
 <meta name="theme-color" content="#0a0e27">
+<link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23667eea'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='system-ui' font-weight='bold'>S4</text></svg>">
 <title>Stay4S Companion v2</title>
 <style>
@@ -80,7 +81,7 @@ select{padding:12px;background:var(--card);border:1px solid var(--border);border
 .presence-dot{width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0}
 .video-result{border-radius:12px;overflow:hidden;margin:8px 0}
 .recording{animation:pulse 1s infinite;background:var(--red)!important}
-</style></head><body>
+body.light{--bg:#f4f6ff;--card:rgba(255,255,255,.88);--card-solid:#fff;--border:rgba(100,110,150,.28);--text:#18213d;color:#18213d}body.light .msg.ai,body.light .input-area input,body.light textarea,body.light select{color:#18213d}.v3-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px}.v3-tools button,.v3-tools select,.v3-tools .file-label{padding:7px 9px;border:1px solid var(--border);border-radius:9px;background:var(--card);color:var(--text);font-size:12px}.v3-tools .file-label{cursor:pointer}.v3-tools input[type=file]{display:none}.v3-status{color:var(--green);font-size:11px}</style></head><body>
 <!-- Onboarding -->
 <div id="onboarding" class="onboarding hidden">
 <div class="logo">Stay4S</div>
@@ -96,6 +97,14 @@ select{padding:12px;background:var(--card);border:1px solid var(--border);border
 <div class="model-option" onclick="selectModel('scam','Scam Check')"><span>Scam</span><span class="badge free">GRATIS</span></div>
 </div>
 <p>Soevereine Nederlandse AI</p>
+</div>
+<div class="v3-tools" aria-label="Stay4S v3 controls">
+<button type="button" onclick="toggleTheme()" id="theme-toggle">☀️ Licht</button>
+<select id="language-select" aria-label="Language" onchange="setLanguage(this.value)"><option value="nl">Nederlands</option><option value="en">English</option><option value="de">Deutsch</option></select>
+<button type="button" onclick="enablePush()">🔔 Push</button>
+<label class="file-label">📷 Scam-foto<input id="scam-photo" type="file" accept="image/png,image/jpeg,image/webp" onchange="scanPhoto(this.files[0])"></label>
+<label class="file-label">🎙 Audio<input id="voice-file" type="file" accept="audio/*" onchange="transcribeAudio(this.files[0])"></label>
+<span class="v3-status" id="offline-status">Online</span>
 </div>
 <div class="tabs">
 <div class="tab active" onclick="showTab('chat',event)">Chat</div>
@@ -203,7 +212,7 @@ select{padding:12px;background:var(--card);border:1px solid var(--border);border
 </div>
 <script>
 const API_URL='https://api.stay4s.com';
-const API_KEY='stay4s-pro-demo';
+let API_KEY=localStorage.getItem('stay4s_api_key')||'stay4s-pro-demo';
 const MSG_URL='https://companion.stay4s.com';
 const VIDEO_URL='https://video.stay4s.com';
 let currentModel='snel';
@@ -355,6 +364,23 @@ document.getElementById('settings-learn').textContent=learnEnabled?'Aan':'Uit';
 function togglePause(){isPaused=!isPaused;document.getElementById('pause-btn').textContent=isPaused?'AI Hervatten':'AI Pauzeren';}
 function setProfile(p){localStorage.setItem('profile',p);alert('Profiel: '+p);}
 function toggleLearn(){learnEnabled=!learnEnabled;localStorage.setItem('learn',learnEnabled?'on':'off');updateSettings();}
+
+
+function toggleTheme(){document.body.classList.toggle('light');const light=document.body.classList.contains('light');localStorage.setItem('stay4s_theme',light?'light':'dark');document.getElementById('theme-toggle').textContent=light?'🌙 Donker':'☀️ Licht';}
+const I18N={nl:{chat:'Chat',messages:'Berichten',video:'Video',scan:'Scam Scan',translate:'Vertaal',summarize:'Samenvatten',code:'Code',settings:'Instellingen',online:'Online',offline:'Offline'},en:{chat:'Chat',messages:'Messages',video:'Video',scan:'Scam Scan',translate:'Translate',summarize:'Summarize',code:'Code',settings:'Settings',online:'Online',offline:'Offline'},de:{chat:'Chat',messages:'Nachrichten',video:'Video',scan:'Betrugsprüfung',translate:'Übersetzen',summarize:'Zusammenfassen',code:'Code',settings:'Einstellungen',online:'Online',offline:'Offline'}};
+function setLanguage(lang){localStorage.setItem('stay4s_language',lang);document.documentElement.lang=lang;const map=I18N[lang]||I18N.nl;document.querySelectorAll('.tabs .tab').forEach(el=>{const key=({'Chat':'chat','Berichten':'messages','Video':'video','Scam Scan':'scan','Vertaal':'translate','Samenvatten':'summarize','Code':'code','Instellingen':'settings'})[el.textContent.trim()];if(key)el.textContent=map[key];});updateOfflineStatus();}
+function updateOfflineStatus(){const el=document.getElementById('offline-status');if(el)el.textContent=navigator.onLine?(I18N[localStorage.getItem('stay4s_language')||'nl']||I18N.nl).online:(I18N[localStorage.getItem('stay4s_language')||'nl']||I18N.nl).offline;}
+function queueOfflineMessage(text){const q=JSON.parse(localStorage.getItem('stay4s_offline_queue')||'[]');q.push({text:text,created_at:new Date().toISOString()});localStorage.setItem('stay4s_offline_queue',JSON.stringify(q.slice(-100)));}
+async function flushOfflineQueue(){if(!navigator.onLine)return;const q=JSON.parse(localStorage.getItem('stay4s_offline_queue')||'[]');const remain=[];for(const item of q){try{await apiCall('chat',{prompt:item.text});}catch(e){remain.push(item);}}localStorage.setItem('stay4s_offline_queue',JSON.stringify(remain));}
+async function scanPhoto(file){if(!file)return;const result=document.getElementById('scan-result');if(result)result.textContent='Foto analyseren...';const form=new FormData();form.append('image',file,file.name);try{const r=await fetch(API_URL+'/v1/scan/image',{method:'POST',headers:{'Authorization':'Bearer '+API_KEY},body:form});const d=await r.json();if(result)result.textContent=r.ok?(d.result||'Geen tekstresultaat ontvangen.'):('Fout: '+(d.detail||r.status));}catch(e){if(result)result.textContent='Scanserver niet bereikbaar.';}}
+async function transcribeAudio(file){if(!file)return;try{const form=new FormData();form.append('audio',file,file.name);const r=await fetch(API_URL+'/v1/voice',{method:'POST',headers:{'Authorization':'Bearer '+API_KEY},body:form});const d=await r.json();const area=document.getElementById('chat-messages');const msg=document.createElement('div');msg.className='msg ai';msg.textContent=r.ok?('Transcriptie: '+d.text):('Voice: '+(d.detail||r.status));area.appendChild(msg);}catch(e){alert('Transcriptie niet beschikbaar.');}}
+function b64urlToUint8(s){const p='='.repeat((4-s.length%4)%4);const raw=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(raw,c=>c.charCodeAt(0));}
+async function enablePush(){if(!('serviceWorker'in navigator)||!('PushManager'in window)||!('Notification'in window)){alert('Deze browser ondersteunt Web Push niet.');return;}const permission=await Notification.requestPermission();if(permission!=='granted'){alert('Pushmelding niet toegestaan.');return;}try{const reg=await navigator.serviceWorker.ready;const r=await fetch(API_URL+'/v1/push/vapid-public-key',{headers:{'Authorization':'Bearer '+API_KEY}});const d=await r.json();if(!r.ok)throw new Error(d.detail||'VAPID niet geconfigureerd');const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64urlToUint8(d.public_key)});const saved=await fetch(API_URL+'/v1/push/subscribe',{method:'POST',headers:{'Authorization':'Bearer '+API_KEY,'Content-Type':'application/json'},body:JSON.stringify({subscription:sub})});if(!saved.ok)throw new Error('Opslaan van pushabonnement mislukt');alert('Pushmeldingen ingeschakeld.');}catch(e){alert('Push niet ingesteld: '+e.message);}}
+window.addEventListener('online',()=>{updateOfflineStatus();flushOfflineQueue();});window.addEventListener('offline',updateOfflineStatus);
+if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{});}
+if(localStorage.getItem('stay4s_theme')==='light')document.body.classList.add('light');
+document.getElementById('theme-toggle').textContent=document.body.classList.contains('light')?'🌙 Donker':'☀️ Licht';
+document.getElementById('language-select').value=localStorage.getItem('stay4s_language')||'nl';setLanguage(document.getElementById('language-select').value);updateOfflineStatus();
 
 checkOnboarding();updateSettings();
 </script>
