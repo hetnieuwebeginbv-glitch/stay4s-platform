@@ -272,7 +272,7 @@ const r=await apiCall('chat',{prompt:msg});
 document.getElementById('typing-indicator').remove();
 const aiMsg=document.createElement('div');aiMsg.className='msg ai';aiMsg.textContent=r.response;messages.appendChild(aiMsg);
 showSmartSuggestions(msg);
-}catch(e){document.getElementById('typing-indicator').remove();const errMsg=document.createElement('div');errMsg.className='msg system';errMsg.textContent='Verbinding mislukt.';messages.appendChild(errMsg);}
+}catch(e){document.getElementById('typing-indicator').remove();if(!navigator.onLine){queueOfflineMessage(msg);const q=document.createElement('div');q.className='msg system';q.textContent='Offline: bericht in wachtrij geplaatst.';messages.appendChild(q);}else{const errMsg=document.createElement('div');errMsg.className='msg system';errMsg.textContent='Verbinding mislukt.';messages.appendChild(errMsg);}}
 messages.scrollTop=messages.scrollHeight;
 }
 function showSmartSuggestions(msg){
@@ -344,8 +344,8 @@ const input=document.getElementById('video-input').value.trim();if(!input)return
 const result=document.getElementById('video-result');
 result.innerHTML='<div class="glass-card"><div class="loading"></div> Video genereren... (15-30s)</div>';
 try{
-const r=await fetch(VIDEO_URL+'/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:input,width:parseInt(document.getElementById('video-width').value),height:parseInt(document.getElementById('video-height').value),num_frames:parseInt(document.getElementById('video-frames').value),steps:20})});
-const d=await r.json();if(d.video){result.innerHTML='<div class="glass-card"><h3>Video klaar!</h3><div class="video-result"><img src="data:image/gif;base64,'+d.video+'" alt="video"></div><p>'+(d.latency_ms/1000).toFixed(1)+'s | '+d.frames+' frames</p></div>';}
+const r=await fetch(API_URL+'/v1/video',{method:'POST',headers:{'Authorization':'Bearer '+API_KEY,'Content-Type':'application/json'},body:JSON.stringify({prompt:input,width:parseInt(document.getElementById('video-width').value),height:parseInt(document.getElementById('video-height').value),num_frames:parseInt(document.getElementById('video-frames').value),steps:20})});
+const d=await r.json();const vd=d.result||d;if(r.ok&&(vd.video||vd.video_url)){result.innerHTML='<div class="glass-card"><h3>Video klaar!</h3><div class="video-result"><img src="data:image/gif;base64,'+d.video+'" alt="video"></div><p>'+(d.latency_ms/1000).toFixed(1)+'s | '+d.frames+' frames</p></div>';}
 else{result.innerHTML='<div class="glass-card"><p>Mislukt: '+(d.detail||'')+'</p></div>';}
 }catch(e){result.innerHTML='<div class="glass-card"><p>Video server niet bereikbaar.</p></div>';}
 }
