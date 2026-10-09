@@ -503,6 +503,18 @@ def _ensure_extension_tables():
 
 _ensure_extension_tables()
 
+def _load_customer_keys():
+    conn = _db()
+    try:
+        rows = conn.execute("SELECT api_key,tier,name,email FROM customers WHERE api_key IS NOT NULL AND status='active'").fetchall()
+        for api_key,tier,name,email in rows:
+            if tier in TIERS:
+                API_KEYS[api_key] = {"tier":tier,"customer":name or email,"email":email}
+    finally:
+        conn.close()
+
+_load_customer_keys()
+
 @app.post("/v1/video")
 async def v1_video(request: Request, ktr=Depends(verify_key)):
     key, tier, rem = ktr
@@ -633,6 +645,15 @@ async def v1_stream(ws: WebSocket):
         await ws.send_json({"type": "ready", "tier": tier})
         while True:
             msg = await ws.receive_json()
+            # Re-check the daily quota for every message; WebSocket sessions must not bypass limits.
+            day_ago = (datetime.utcnow() - timedelta(days=1)).isoformat()
+            conn = _db()
+            count = conn.execute("SELECT COUNT(*) FROM usage WHERE api_key=? AND timestamp>?", (key, day_ago)).fetchone()[0]
+            conn.close()
+            if limit is not None and count >= limit:
+                await ws.send_json({"type":"error","error":"daily_rate_limit_exceeded"})
+                await ws.close(code=1008)
+                return
             prompt = str(msg.get("prompt", "")).strip()
             if not prompt or len(prompt) > 12000:
                 await ws.send_json({"type": "error", "error": "prompt_required_or_too_long"})
@@ -791,10 +812,16 @@ async def v1_subscribe(request: Request):
                 raise HTTPException(409, "Email is already registered.")
             finally:
                 conn.close()
+            session_token = secrets.token_urlsafe(32)
+            token_hash = hashlib.sha256(session_token.encode()).hexdigest()
+            conn = _db()
+            conn.execute("INSERT INTO checkout_sessions (token_hash,customer_id,mollie_payment_id,expires_at,consumed) VALUES (?,?,?,?,0)", (token_hash,customer_id,"pending",(datetime.utcnow()+timedelta(hours=2)).isoformat()))
+            conn.commit()
+            conn.close()
             payment_resp = await client.post(f"https://api.mollie.com/v2/customers/{mollie_customer['id']}/payments", headers=headers, json={
                 "amount":{"currency":"EUR","value":amount},
                 "description":f"Stay4S {TIERS[tier]['name']} abonnement",
-                "redirectUrl":f"{PUBLIC_BASE_URL}/payment/return",
+                "redirectUrl":f"{PUBLIC_BASE_URL}/payment/return?claim={session_token}",
                 "webhookUrl":MOLLIE_WEBHOOK_URL,
                 "sequenceType":"first",
                 "metadata":{"customer_id":customer_id,"tier":tier,"email":email}
@@ -803,6 +830,7 @@ async def v1_subscribe(request: Request):
             payment = payment_resp.json()
             conn = _db()
             conn.execute("INSERT INTO payments (customer_id,amount,currency,status,mollie_payment_id,created_at) VALUES (?,?,?,?,?,?)", (customer_id,float(amount),"EUR",payment.get("status","open"),payment["id"],datetime.utcnow().isoformat()))
+            conn.execute("UPDATE checkout_sessions SET mollie_payment_id=? WHERE token_hash=?", (payment["id"],token_hash))
             conn.commit()
             conn.close()
             return {"status":"checkout_required","tier":tier,"amount_eur":amount,"checkout_url":payment.get("_links",{}).get("checkout",{}).get("href"),"payment_id":payment["id"]}
@@ -868,9 +896,36 @@ async def v1_subscribe_status(payment_id: str):
         raise HTTPException(404, "Payment not found.")
     return {"payment_id":payment_id,"status":row[0]}
 
+@app.post("/v1/subscribe/claim")
+async def v1_subscribe_claim(request: Request):
+    body = await request.json()
+    token = str(body.get("claim",""))
+    if not token or len(token) > 256:
+        raise HTTPException(422,"Invalid claim token.")
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    conn = _db()
+    try:
+        row = conn.execute("SELECT customer_id,mollie_payment_id,expires_at,consumed FROM checkout_sessions WHERE token_hash=?", (token_hash,)).fetchone()
+        if not row:
+            raise HTTPException(404,"Checkout claim not found.")
+        customer_id,payment_id,expires_at,consumed = row
+        if consumed or datetime.fromisoformat(expires_at) < datetime.utcnow():
+            raise HTTPException(410,"Checkout claim expired or already used.")
+        pay = conn.execute("SELECT status FROM payments WHERE mollie_payment_id=?", (payment_id,)).fetchone()
+        if not pay or pay[0] != "paid":
+            return {"status":pay[0] if pay else "pending","api_key":None}
+        customer = conn.execute("SELECT api_key,tier FROM customers WHERE id=?", (customer_id,)).fetchone()
+        if not customer or not customer[0]:
+            raise HTTPException(409,"Payment is paid but account activation is pending.")
+        conn.execute("UPDATE checkout_sessions SET consumed=1 WHERE token_hash=?", (token_hash,))
+        conn.commit()
+        return {"status":"active","tier":customer[1],"api_key":customer[0]}
+    finally:
+        conn.close()
+
 @app.get("/payment/return")
 async def payment_return():
-    return HTMLResponse("<!doctype html><html lang='nl'><meta charset='utf-8'><meta name='viewport' content='width=device-width'><title>Stay4S betaling</title><body style='font-family:system-ui;max-width:640px;margin:4rem auto;padding:1rem'><h1>Bedankt</h1><p>Je betaling wordt gecontroleerd. Je ontvangt bevestiging via het afgesproken klantkanaal. Als je nog geen klantkanaal hebt ingesteld, neem contact op met support.</p><p>Sluit dit venster pas nadat Mollie de betaling heeft bevestigd.</p></body></html>")
+    return HTMLResponse("""<!doctype html><html lang="nl"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Stay4S betaling</title><body style="font-family:system-ui;max-width:640px;margin:4rem auto;padding:1rem"><h1>Stay4S betaling</h1><p id="status">Betaling controleren…</p><pre id="key" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre><script>const claim=new URLSearchParams(location.search).get('claim');if(!claim){document.getElementById('status').textContent='Geen claimtoken gevonden.';}else{fetch('/v1/subscribe/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({claim})}).then(r=>r.json()).then(d=>{document.getElementById('status').textContent=d.status==='active'?'Betaling bevestigd. Kopieer en bewaar je API-key veilig.':('Betalingsstatus: '+d.status+'. Vernieuw deze pagina na bevestiging.');if(d.api_key)document.getElementById('key').textContent=d.api_key;}).catch(()=>document.getElementById('status').textContent='Status tijdelijk niet beschikbaar.');}</script></body></html>""")
 
 
 if __name__ == "__main__":
