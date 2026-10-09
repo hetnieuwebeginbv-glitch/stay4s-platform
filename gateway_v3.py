@@ -492,6 +492,11 @@ def _ensure_extension_tables():
             id INTEGER PRIMARY KEY AUTOINCREMENT, mollie_payment_id TEXT,
             event_type TEXT NOT NULL, payload TEXT, created_at TEXT NOT NULL
         )""")
+        conn.execute("""CREATE TABLE IF NOT EXISTS push_subscriptions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, api_key TEXT NOT NULL,
+            endpoint TEXT NOT NULL UNIQUE, subscription_json TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )""")
         conn.commit()
     finally:
         conn.close()
@@ -666,6 +671,83 @@ async def v1_stream(ws: WebSocket):
             await ws.close(code=1011)
         except Exception:
             pass
+
+
+@app.post("/v1/scan/image")
+async def v1_scan_image(request: Request, image: UploadFile = File(...), ktr=Depends(verify_key)):
+    key, tier, rem = ktr
+    if "scan" not in TIERS[tier]["features"] and "all" not in TIERS[tier]["features"]:
+        raise HTTPException(403, "Image scam scan is not included in this plan.")
+    if image.content_type not in {"image/jpeg","image/png","image/webp"}:
+        raise HTTPException(415, "Upload a JPEG, PNG or WebP image.")
+    raw = await image.read()
+    if not raw or len(raw) > 8 * 1024 * 1024:
+        raise HTTPException(413, "Image must be non-empty and at most 8 MiB.")
+    try:
+        import base64
+        payload = base64.b64encode(raw).decode("ascii")
+        async with httpx.AsyncClient(timeout=60) as client:
+            r = await client.post(f"{OLLAMA_URL}/api/chat", json={
+                "model": os.getenv("OLLAMA_VISION_MODEL","llama3.2-vision"),
+                "messages":[{"role":"user","content":"Analyseer deze afbeelding op phishing, fraude, verdachte betaalverzoeken, nepwebsites en impersonatie. Geef een korte onderbouwde beoordeling in het Nederlands en benoem onzekerheid. Dit is geen definitieve veiligheidswaarborg.","images":[payload]}],
+                "stream":False
+            })
+            r.raise_for_status()
+            data = r.json()
+        result = (data.get("message") or {}).get("content","")
+        log_usage(key,"scan_image",len(raw),len(result),0.0)
+        return JSONResponse({"endpoint":"scan/image","result":result,"model":os.getenv("OLLAMA_VISION_MODEL","llama3.2-vision")},headers=rate_headers(key,tier,rem))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(502,"Image scam scan unavailable.")
+
+@app.get("/v1/push/vapid-public-key")
+async def push_vapid_public_key(ktr=Depends(verify_key)):
+    public_key = os.getenv("VAPID_PUBLIC_KEY","")
+    if not public_key:
+        raise HTTPException(503,"Web Push is not configured.")
+    return {"public_key":public_key}
+
+@app.post("/v1/push/subscribe")
+async def push_subscribe(request: Request, ktr=Depends(verify_key)):
+    key, tier, rem = ktr
+    body = await request.json()
+    sub = body.get("subscription")
+    if not isinstance(sub,dict) or not sub.get("endpoint") or not isinstance(sub.get("keys"),dict):
+        raise HTTPException(422,"Invalid Web Push subscription.")
+    conn=_db()
+    try:
+        conn.execute("INSERT INTO push_subscriptions (api_key,endpoint,subscription_json,created_at) VALUES (?,?,?,?) ON CONFLICT(endpoint) DO UPDATE SET api_key=excluded.api_key,subscription_json=excluded.subscription_json",
+            (key,sub["endpoint"],json.dumps(sub),datetime.utcnow().isoformat()))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"saved":True}
+
+@app.post("/v1/push/test")
+async def push_test(request: Request, ktr=Depends(verify_key)):
+    key,tier,rem=ktr
+    try:
+        from pywebpush import webpush
+    except ImportError:
+        raise HTTPException(503,"Install pywebpush to enable Web Push.")
+    private_key=os.getenv("VAPID_PRIVATE_KEY","")
+    claims={"sub":os.getenv("VAPID_CLAIMS_EMAIL","mailto:support@stay4s.com")}
+    if not private_key or not os.getenv("VAPID_PUBLIC_KEY"):
+        raise HTTPException(503,"VAPID keys are not configured.")
+    conn=_db()
+    subs=[json.loads(row[0]) for row in conn.execute("SELECT subscription_json FROM push_subscriptions WHERE api_key=?",(key,)).fetchall()]
+    conn.close()
+    sent=0
+    for sub in subs:
+        try:
+            webpush(subscription_info=sub,data=json.dumps({"title":"Stay4S","body":"Pushmeldingen werken."}),vapid_private_key=private_key,vapid_claims=claims)
+            sent+=1
+        except Exception:
+            continue
+    return {"subscriptions":len(subs),"sent":sent}
+
 
 @app.post("/v1/subscribe")
 async def v1_subscribe(request: Request):
