@@ -854,8 +854,17 @@ async def mollie_webhook(request: Request):
     try:
         row = conn.execute("SELECT customer_id FROM payments WHERE mollie_payment_id=?", (payment_id,)).fetchone()
         if not row:
-            raise HTTPException(404, "Payment not found.")
-        customer_id = row[0]
+            # Mollie sends a new payment ID for recurring subscription charges.
+            mollie_customer_id = payment.get("customerId")
+            customer_row = conn.execute("SELECT id,tier FROM customers WHERE mollie_customer_id=? AND status='active'", (mollie_customer_id,)).fetchone() if mollie_customer_id else None
+            if not customer_row:
+                raise HTTPException(404, "Payment/customer not found.")
+            customer_id, tier = customer_row
+            amount_value = float((payment.get("amount") or {}).get("value", "0"))
+            conn.execute("INSERT INTO payments (customer_id,amount,currency,status,mollie_payment_id,created_at) VALUES (?,?,?,?,?,?)", (customer_id,amount_value,(payment.get("amount") or {}).get("currency","EUR"),payment.get("status","unknown"),payment_id,datetime.utcnow().isoformat()))
+            conn.commit()
+        else:
+            customer_id = row[0]
         conn.execute("UPDATE payments SET status=? WHERE mollie_payment_id=?", (payment.get("status","unknown"), payment_id))
         conn.execute("INSERT INTO subscription_events (mollie_payment_id,event_type,payload,created_at) VALUES (?,?,?,?)", (payment_id,payment.get("status","unknown"),json.dumps({"status":payment.get("status"),"sequenceType":payment.get("sequenceType")}),datetime.utcnow().isoformat()))
         conn.commit()
@@ -863,23 +872,28 @@ async def mollie_webhook(request: Request):
             customer = conn.execute("SELECT email,name,tier,mollie_customer_id FROM customers WHERE id=?", (customer_id,)).fetchone()
             if customer:
                 email,name,tier,mollie_customer_id = customer
-                # Create recurring subscription after the first payment has established a mandate.
+                subscription_ok = False
+                # The first payment must establish the recurring subscription before Pro/Enterprise is activated.
                 if mollie_customer_id and payment.get("sequenceType") == "first":
                     amount = f"{TIERS[tier]['price']:.2f}"
                     async with httpx.AsyncClient(timeout=20) as client:
                         sub_resp = await client.post(f"https://api.mollie.com/v2/customers/{mollie_customer_id}/subscriptions",
                             headers={"Authorization": f"Bearer {MOLLIE_API_KEY}","Content-Type":"application/json"},
                             json={"amount":{"currency":"EUR","value":amount},"interval":"1 month","description":f"Stay4S {TIERS[tier]['name']} abonnement","webhookUrl":MOLLIE_WEBHOOK_URL})
-                        # A subscription failure is logged and does not falsely report recurring activation.
-                        if sub_resp.status_code < 300:
-                            conn.execute("UPDATE customers SET status='active' WHERE id=?", (customer_id,))
-                            conn.commit()
-                api_key = conn.execute("SELECT api_key FROM customers WHERE id=?", (customer_id,)).fetchone()[0]
-                if not api_key:
-                    api_key = "stay4s-" + secrets.token_urlsafe(32)
-                    conn.execute("UPDATE customers SET api_key=?, status='active' WHERE id=?", (api_key,customer_id))
-                    conn.commit()
-                API_KEYS[api_key] = {"tier":tier,"customer":name or email,"email":email}
+                    subscription_ok = sub_resp.status_code < 300
+                    if subscription_ok:
+                        conn.execute("UPDATE customers SET status='active' WHERE id=?", (customer_id,))
+                        conn.commit()
+                else:
+                    current_status = conn.execute("SELECT status FROM customers WHERE id=?", (customer_id,)).fetchone()
+                    subscription_ok = bool(current_status and current_status[0] == "active")
+                if subscription_ok:
+                    api_key = conn.execute("SELECT api_key FROM customers WHERE id=?", (customer_id,)).fetchone()[0]
+                    if not api_key:
+                        api_key = "stay4s-" + secrets.token_urlsafe(32)
+                        conn.execute("UPDATE customers SET api_key=?, status='active' WHERE id=?", (api_key,customer_id))
+                        conn.commit()
+                    API_KEYS[api_key] = {"tier":tier,"customer":name or email,"email":email}
     finally:
         conn.close()
     return {"received":True}
