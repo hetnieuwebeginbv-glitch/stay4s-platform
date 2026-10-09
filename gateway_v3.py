@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Stay4S API Platform v3 - Production-ready"""
-import json, time, os, hashlib, sqlite3, asyncio, subprocess
+import json, time, os, hashlib, sqlite3, asyncio, subprocess, secrets, hmac
 from datetime import datetime, timedelta
-from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi import FastAPI, Request, HTTPException, Depends, UploadFile, File, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
@@ -20,9 +20,9 @@ OLLAMA_FALLBACK_MODEL = "llama3.2-vision"
 DB_PATH = "/mnt/usb4/stay4s_commercial.db"
 
 TIERS = {
-    "free": {"name": "Free", "price": 0, "calls_per_hour": 20, "calls_per_month": 1000, "features": ["chat", "translate"]},
-    "pro": {"name": "Pro", "price": 49, "calls_per_hour": 2000, "calls_per_month": 50000, "features": ["chat", "translate", "summarize", "search", "code", "scan", "email", "content"]},
-    "enterprise": {"name": "Enterprise", "price": 499, "calls_per_hour": 20000, "calls_per_month": 500000, "features": ["all", "agents", "train", "rom", "whatsapp", "priority_support"]},
+    "free": {"name": "Free", "price": 0, "requests_per_day": 20, "features": ["chat", "translate"]},
+    "pro": {"name": "Pro", "price": 49, "requests_per_day": 1000, "features": ["chat", "translate", "summarize", "search", "code", "scan", "email", "content", "video", "voice", "embed"]},
+    "enterprise": {"name": "Enterprise", "price": 199, "requests_per_day": None, "features": ["all", "agents", "train", "rom", "whatsapp", "priority_support", "video", "voice", "embed"]},
 }
 
 API_KEYS = {
@@ -83,13 +83,14 @@ async def verify_key(request: Request):
     tier_info = TIERS[tier]
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    one_hour_ago = (datetime.utcnow() - timedelta(hours=1)).isoformat()
-    c.execute("SELECT COUNT(*) FROM usage WHERE api_key=? AND timestamp>?", (key, one_hour_ago))
+    day_ago = (datetime.utcnow() - timedelta(days=1)).isoformat()
+    c.execute("SELECT COUNT(*) FROM usage WHERE api_key=? AND timestamp>?", (key, day_ago))
     count = c.fetchone()[0]
-    remaining = max(0, tier_info["calls_per_hour"] - count)
+    daily_limit = tier_info["requests_per_day"]
+    remaining = None if daily_limit is None else max(0, daily_limit - count)
     conn.close()
-    if count >= tier_info["calls_per_hour"]:
-        raise HTTPException(429, f"Rate limit exceeded. Upgrade at https://api.stay4s.com")
+    if daily_limit is not None and count >= daily_limit:
+        raise HTTPException(429, "Daily rate limit exceeded. Upgrade at https://api.stay4s.com")
     return key, tier, remaining
 
 def log_usage(key, endpoint, tokens_in=0, tokens_out=0, cost=0.0):
@@ -107,7 +108,7 @@ def log_revenue(source, amount, description=""):
     conn.close()
 
 def rate_headers(key, tier, remaining):
-    return {"X-RateLimit-Limit": str(TIERS[tier]["calls_per_hour"]), "X-RateLimit-Remaining": str(remaining), "X-RateLimit-Tier": tier, "Access-Control-Expose-Headers": "X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Tier"}
+    return {"X-RateLimit-Limit": str(TIERS[tier]["requests_per_day"] if TIERS[tier]["requests_per_day"] is not None else "unlimited"), "X-RateLimit-Remaining": str(remaining if remaining is not None else "unlimited"), "X-RateLimit-Tier": tier, "Access-Control-Expose-Headers": "X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Tier"}
 
 
 LANDING_PAGE = """<!DOCTYPE html>
@@ -463,6 +464,332 @@ async def api_docs():
             {"method": "GET", "path": "/docs", "description": "API Documentation"},
         ], "pricing": TIERS
     })
+
+
+
+# === STAY4S GATEWAY V3 EXTENSIONS (2026-10-09) ===
+VIDEO_API_URL = os.getenv("VIDEO_API_URL", "https://video.stay4s.com/generate")
+WHISPER_URL = os.getenv("WHISPER_URL", "")
+OLLAMA_EMBED_MODEL = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
+OLLAMA_CHAT_MODEL = os.getenv("OLLAMA_CHAT_MODEL", OLLAMA_FALLBACK_MODEL)
+MOLLIE_WEBHOOK_URL = os.getenv("MOLLIE_WEBHOOK_URL", "https://api.stay4s.com/webhooks/mollie")
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://api.stay4s.com")
+
+def _mollie_ready():
+    return bool(MOLLIE_API_KEY and MOLLIE_API_KEY.startswith(("test_", "live_")) and "dummy" not in MOLLIE_API_KEY.lower() and "placeholder" not in MOLLIE_API_KEY.lower())
+
+def _db():
+    return sqlite3.connect(DB_PATH, timeout=10)
+
+def _ensure_extension_tables():
+    conn = _db()
+    try:
+        conn.execute("""CREATE TABLE IF NOT EXISTS checkout_sessions (
+            token_hash TEXT PRIMARY KEY, customer_id INTEGER NOT NULL,
+            mollie_payment_id TEXT, expires_at TEXT NOT NULL, consumed INTEGER NOT NULL DEFAULT 0
+        )""")
+        conn.execute("""CREATE TABLE IF NOT EXISTS subscription_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, mollie_payment_id TEXT,
+            event_type TEXT NOT NULL, payload TEXT, created_at TEXT NOT NULL
+        )""")
+        conn.commit()
+    finally:
+        conn.close()
+
+_ensure_extension_tables()
+
+@app.post("/v1/video")
+async def v1_video(request: Request, ktr=Depends(verify_key)):
+    key, tier, rem = ktr
+    if "video" not in TIERS[tier]["features"] and "all" not in TIERS[tier]["features"]:
+        raise HTTPException(403, "Video is not included in this plan.")
+    body = await request.json()
+    prompt = str(body.get("prompt", "")).strip()
+    if not prompt or len(prompt) > 2000:
+        raise HTTPException(422, "prompt is required and must be at most 2000 characters.")
+    payload = {
+        "prompt": prompt,
+        "width": max(256, min(1024, int(body.get("width", 512)))),
+        "height": max(256, min(1024, int(body.get("height", 512)))),
+        "num_frames": max(8, min(96, int(body.get("num_frames", 16)))),
+        "steps": max(1, min(40, int(body.get("steps", 20))))
+    }
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(240.0, connect=10.0)) as client:
+            r = await client.post(VIDEO_API_URL, json=payload)
+        if r.status_code >= 400:
+            raise HTTPException(502, f"Video provider returned HTTP {r.status_code}.")
+        data = r.json()
+        log_usage(key, "video", len(prompt), 0, 0.0)
+        return JSONResponse({"endpoint": "video", "result": data, "tier": tier}, headers=rate_headers(key, tier, rem))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(502, "Video service unavailable.")
+
+@app.post("/v1/voice")
+async def v1_voice(request: Request, audio: UploadFile = File(...), ktr=Depends(verify_key)):
+    key, tier, rem = ktr
+    if "voice" not in TIERS[tier]["features"] and "all" not in TIERS[tier]["features"]:
+        raise HTTPException(403, "Voice transcription is not included in this plan.")
+    if not WHISPER_URL:
+        raise HTTPException(503, "Whisper is not configured. Set WHISPER_URL to a private Whisper-compatible /asr endpoint.")
+    allowed = {"audio/wav", "audio/x-wav", "audio/mpeg", "audio/mp4", "audio/webm", "audio/ogg", "audio/flac", "audio/x-m4a", "application/octet-stream"}
+    if audio.content_type and audio.content_type not in allowed:
+        raise HTTPException(415, "Unsupported audio content type.")
+    content = await audio.read()
+    if not content or len(content) > 25 * 1024 * 1024:
+        raise HTTPException(413, "Audio must be non-empty and at most 25 MiB.")
+    try:
+        async with httpx.AsyncClient(timeout=120) as client:
+            r = await client.post(WHISPER_URL, files={"audio_file": (audio.filename or "audio.webm", content, audio.content_type or "application/octet-stream")})
+        if r.status_code >= 400:
+            raise HTTPException(502, f"Whisper provider returned HTTP {r.status_code}.")
+        data = r.json()
+        text = data.get("text") or data.get("transcription") or data.get("result")
+        if text is None:
+            raise HTTPException(502, "Whisper response did not contain transcription text.")
+        log_usage(key, "voice", len(content), len(text), 0.0)
+        return JSONResponse({"endpoint": "voice", "text": text, "language": data.get("language"), "tier": tier}, headers=rate_headers(key, tier, rem))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(502, "Voice transcription service unavailable.")
+
+@app.get("/v1/models")
+async def v1_models(ktr=Depends(verify_key)):
+    key, tier, rem = ktr
+    ollama_models = []
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            r = await client.get(f"{OLLAMA_URL}/api/tags")
+            r.raise_for_status()
+            ollama_models = [{"id": m.get("name"), "provider": "ollama", "size": m.get("size")} for m in r.json().get("models", [])]
+    except Exception:
+        pass
+    # Cloudflare model IDs are configured explicitly to avoid exposing account internals.
+    cf_models = [m.strip() for m in os.getenv("CLOUDFLARE_MODELS", CF_MODEL_CHAT).split(",") if m.strip()]
+    log_usage(key, "models", 0, 0, 0.0)
+    return JSONResponse({"models": ollama_models + [{"id": m, "provider": "cloudflare-workers-ai"} for m in cf_models], "providers": {"ollama": bool(ollama_models), "cloudflare_workers_ai": bool(cf_models)}}, headers=rate_headers(key, tier, rem))
+
+@app.post("/v1/embed")
+async def v1_embed(request: Request, ktr=Depends(verify_key)):
+    key, tier, rem = ktr
+    if "embed" not in TIERS[tier]["features"] and "all" not in TIERS[tier]["features"]:
+        raise HTTPException(403, "Embeddings are not included in this plan.")
+    body = await request.json()
+    text_value = body.get("input", body.get("text", ""))
+    if not isinstance(text_value, (str, list)) or not text_value:
+        raise HTTPException(422, "Provide non-empty 'input' or 'text'.")
+    model = str(body.get("model") or OLLAMA_EMBED_MODEL)
+    if model != OLLAMA_EMBED_MODEL:
+        raise HTTPException(400, f"Only configured embedding model '{OLLAMA_EMBED_MODEL}' is allowed.")
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.post(f"{OLLAMA_URL}/api/embed", json={"model": model, "input": text_value})
+            if r.status_code == 404:
+                r = await client.post(f"{OLLAMA_URL}/api/embeddings", json={"model": model, "prompt": text_value if isinstance(text_value, str) else text_value[0]})
+            r.raise_for_status()
+            data = r.json()
+        embeddings = data.get("embeddings")
+        if embeddings is None and data.get("embedding") is not None:
+            embeddings = [data["embedding"]]
+        if embeddings is None:
+            raise HTTPException(502, "Ollama returned no embedding.")
+        log_usage(key, "embed", len(text_value) if isinstance(text_value, str) else sum(len(str(x)) for x in text_value), 0, 0.0)
+        return JSONResponse({"model": model, "embeddings": embeddings}, headers=rate_headers(key, tier, rem))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(502, "Embedding service unavailable.")
+
+@app.websocket("/v1/stream")
+async def v1_stream(ws: WebSocket):
+    await ws.accept()
+    key = None
+    try:
+        # Browser WebSocket cannot set Authorization headers; authenticate in the first frame.
+        auth = await asyncio.wait_for(ws.receive_json(), timeout=8)
+        key = auth.get("api_key") if isinstance(auth, dict) and auth.get("type") == "auth" else None
+        if not key or key not in API_KEYS:
+            await ws.send_json({"type": "error", "error": "unauthorized"})
+            await ws.close(code=1008)
+            return
+        tier = API_KEYS[key]["tier"]
+        day_ago = (datetime.utcnow() - timedelta(days=1)).isoformat()
+        conn = _db()
+        count = conn.execute("SELECT COUNT(*) FROM usage WHERE api_key=? AND timestamp>?", (key, day_ago)).fetchone()[0]
+        conn.close()
+        limit = TIERS[tier]["requests_per_day"]
+        if limit is not None and count >= limit:
+            await ws.send_json({"type": "error", "error": "daily_rate_limit_exceeded"})
+            await ws.close(code=1008)
+            return
+        await ws.send_json({"type": "ready", "tier": tier})
+        while True:
+            msg = await ws.receive_json()
+            prompt = str(msg.get("prompt", "")).strip()
+            if not prompt or len(prompt) > 12000:
+                await ws.send_json({"type": "error", "error": "prompt_required_or_too_long"})
+                continue
+            model = str(msg.get("model") or OLLAMA_CHAT_MODEL)
+            # Allow only locally installed models; prevents arbitrary provider/model routing.
+            async with httpx.AsyncClient(timeout=90) as client:
+                check = await client.get(f"{OLLAMA_URL}/api/tags")
+                available = {m.get("name") for m in check.json().get("models", [])}
+                if model not in available:
+                    await ws.send_json({"type": "error", "error": "model_not_available", "model": model})
+                    continue
+                async with client.stream("POST", f"{OLLAMA_URL}/api/chat", json={"model": model, "messages": [{"role": "user", "content": prompt}], "stream": True}) as response:
+                    if response.status_code >= 400:
+                        await ws.send_json({"type": "error", "error": "model_request_failed"})
+                        continue
+                    async for line in response.aiter_lines():
+                        if not line:
+                            continue
+                        try:
+                            chunk = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        piece = (chunk.get("message") or {}).get("content", "")
+                        if piece:
+                            await ws.send_json({"type": "token", "text": piece})
+                        if chunk.get("done"):
+                            break
+            log_usage(key, "stream", len(prompt), 0, 0.0)
+            await ws.send_json({"type": "done"})
+    except (WebSocketDisconnect, asyncio.TimeoutError):
+        return
+    except Exception:
+        try:
+            await ws.send_json({"type": "error", "error": "stream_failed"})
+            await ws.close(code=1011)
+        except Exception:
+            pass
+
+@app.post("/v1/subscribe")
+async def v1_subscribe(request: Request):
+    body = await request.json()
+    email = str(body.get("email", "")).strip().lower()
+    name = str(body.get("name", "")).strip()
+    company = str(body.get("company", "")).strip()
+    tier = str(body.get("tier", "free")).lower()
+    if not email or "@" not in email or len(email) > 254:
+        raise HTTPException(422, "A valid email is required.")
+    if tier not in TIERS:
+        raise HTTPException(422, "Unknown subscription tier.")
+    if tier == "free":
+        # Free plan is activated without a payment; key is generated server-side.
+        api_key = "stay4s-" + secrets.token_urlsafe(32)
+        conn = _db()
+        try:
+            conn.execute("INSERT INTO customers (email,name,company,tier,api_key,created_at,status) VALUES (?,?,?,?,?,?,?)", (email,name,company,"free",api_key,datetime.utcnow().isoformat(),"active"))
+            conn.commit()
+        except sqlite3.IntegrityError:
+            raise HTTPException(409, "Email is already registered.")
+        finally:
+            conn.close()
+        API_KEYS[api_key] = {"tier":"free","customer":name or email,"email":email}
+        return {"status":"active","tier":"free","api_key":api_key,"daily_limit":20}
+    if not _mollie_ready():
+        raise HTTPException(503, "Mollie is not configured. Set MOLLIE_API_KEY to a valid test_ or live_ key.")
+    amount = f"{TIERS[tier]['price']:.2f}"
+    async with httpx.AsyncClient(timeout=20) as client:
+        headers = {"Authorization": f"Bearer {MOLLIE_API_KEY}", "Content-Type": "application/json"}
+        try:
+            customer_resp = await client.post("https://api.mollie.com/v2/customers", headers=headers, json={"name":name or email,"email":email,"metadata":{"tier":tier}})
+            customer_resp.raise_for_status()
+            mollie_customer = customer_resp.json()
+            conn = _db()
+            try:
+                conn.execute("INSERT INTO customers (email,name,company,tier,mollie_customer_id,created_at,status) VALUES (?,?,?,?,?,?,?)", (email,name,company,tier,mollie_customer["id"],datetime.utcnow().isoformat(),"pending"))
+                conn.commit()
+                customer_id = conn.execute("SELECT id FROM customers WHERE email=?", (email,)).fetchone()[0]
+            except sqlite3.IntegrityError:
+                raise HTTPException(409, "Email is already registered.")
+            finally:
+                conn.close()
+            payment_resp = await client.post(f"https://api.mollie.com/v2/customers/{mollie_customer['id']}/payments", headers=headers, json={
+                "amount":{"currency":"EUR","value":amount},
+                "description":f"Stay4S {TIERS[tier]['name']} abonnement",
+                "redirectUrl":f"{PUBLIC_BASE_URL}/payment/return",
+                "webhookUrl":MOLLIE_WEBHOOK_URL,
+                "sequenceType":"first",
+                "metadata":{"customer_id":customer_id,"tier":tier,"email":email}
+            })
+            payment_resp.raise_for_status()
+            payment = payment_resp.json()
+            conn = _db()
+            conn.execute("INSERT INTO payments (customer_id,amount,currency,status,mollie_payment_id,created_at) VALUES (?,?,?,?,?,?)", (customer_id,float(amount),"EUR",payment.get("status","open"),payment["id"],datetime.utcnow().isoformat()))
+            conn.commit()
+            conn.close()
+            return {"status":"checkout_required","tier":tier,"amount_eur":amount,"checkout_url":payment.get("_links",{}).get("checkout",{}).get("href"),"payment_id":payment["id"]}
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(502, "Could not create Mollie checkout.")
+
+@app.post("/webhooks/mollie")
+async def mollie_webhook(request: Request):
+    form = await request.form()
+    payment_id = form.get("id")
+    if not payment_id or not _mollie_ready():
+        raise HTTPException(400, "Invalid Mollie webhook.")
+    async with httpx.AsyncClient(timeout=20) as client:
+        response = await client.get(f"https://api.mollie.com/v2/payments/{payment_id}", headers={"Authorization": f"Bearer {MOLLIE_API_KEY}"})
+        if response.status_code >= 400:
+            raise HTTPException(502, "Unable to verify payment with Mollie.")
+        payment = response.json()
+    conn = _db()
+    try:
+        row = conn.execute("SELECT customer_id FROM payments WHERE mollie_payment_id=?", (payment_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "Payment not found.")
+        customer_id = row[0]
+        conn.execute("UPDATE payments SET status=? WHERE mollie_payment_id=?", (payment.get("status","unknown"), payment_id))
+        conn.execute("INSERT INTO subscription_events (mollie_payment_id,event_type,payload,created_at) VALUES (?,?,?,?)", (payment_id,payment.get("status","unknown"),json.dumps({"status":payment.get("status"),"sequenceType":payment.get("sequenceType")}),datetime.utcnow().isoformat()))
+        conn.commit()
+        if payment.get("status") == "paid":
+            customer = conn.execute("SELECT email,name,tier,mollie_customer_id FROM customers WHERE id=?", (customer_id,)).fetchone()
+            if customer:
+                email,name,tier,mollie_customer_id = customer
+                # Create recurring subscription after the first payment has established a mandate.
+                if mollie_customer_id and payment.get("sequenceType") == "first":
+                    amount = f"{TIERS[tier]['price']:.2f}"
+                    async with httpx.AsyncClient(timeout=20) as client:
+                        sub_resp = await client.post(f"https://api.mollie.com/v2/customers/{mollie_customer_id}/subscriptions",
+                            headers={"Authorization": f"Bearer {MOLLIE_API_KEY}","Content-Type":"application/json"},
+                            json={"amount":{"currency":"EUR","value":amount},"interval":"1 month","description":f"Stay4S {TIERS[tier]['name']} abonnement","webhookUrl":MOLLIE_WEBHOOK_URL})
+                        # A subscription failure is logged and does not falsely report recurring activation.
+                        if sub_resp.status_code < 300:
+                            conn.execute("UPDATE customers SET status='active' WHERE id=?", (customer_id,))
+                            conn.commit()
+                api_key = conn.execute("SELECT api_key FROM customers WHERE id=?", (customer_id,)).fetchone()[0]
+                if not api_key:
+                    api_key = "stay4s-" + secrets.token_urlsafe(32)
+                    conn.execute("UPDATE customers SET api_key=?, status='active' WHERE id=?", (api_key,customer_id))
+                    conn.commit()
+                API_KEYS[api_key] = {"tier":tier,"customer":name or email,"email":email}
+    finally:
+        conn.close()
+    return {"received":True}
+
+@app.get("/v1/subscribe/status/{payment_id}")
+async def v1_subscribe_status(payment_id: str):
+    # This endpoint deliberately exposes status only; API keys must be delivered through an authenticated customer channel.
+    conn = _db()
+    try:
+        row = conn.execute("SELECT status FROM payments WHERE mollie_payment_id=?", (payment_id,)).fetchone()
+    finally:
+        conn.close()
+    if not row:
+        raise HTTPException(404, "Payment not found.")
+    return {"payment_id":payment_id,"status":row[0]}
+
+@app.get("/payment/return")
+async def payment_return():
+    return HTMLResponse("<!doctype html><html lang='nl'><meta charset='utf-8'><meta name='viewport' content='width=device-width'><title>Stay4S betaling</title><body style='font-family:system-ui;max-width:640px;margin:4rem auto;padding:1rem'><h1>Bedankt</h1><p>Je betaling wordt gecontroleerd. Je ontvangt bevestiging via het afgesproken klantkanaal. Als je nog geen klantkanaal hebt ingesteld, neem contact op met support.</p><p>Sluit dit venster pas nadat Mollie de betaling heeft bevestigd.</p></body></html>")
+
 
 if __name__ == "__main__":
     import uvicorn
