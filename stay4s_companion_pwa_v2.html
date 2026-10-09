@@ -346,7 +346,7 @@ result.innerHTML='<div class="glass-card"><div class="loading"></div> Video gene
 try{
 const r=await fetch(API_URL+'/v1/video',{method:'POST',headers:{'Authorization':'Bearer '+API_KEY,'Content-Type':'application/json'},body:JSON.stringify({prompt:input,width:parseInt(document.getElementById('video-width').value),height:parseInt(document.getElementById('video-height').value),num_frames:parseInt(document.getElementById('video-frames').value),steps:20})});
 const d=await r.json();const v=d.result||d;
-if(r.ok&&(v.video_url||v.video)){const media=v.video_url?'<video controls playsinline style="width:100%" src="'+v.video_url+'"></video>':'<p>Video server heeft een resultaat teruggegeven.</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere">'+JSON.stringify(v).slice(0,800)+'</pre>';result.innerHTML='<div class="glass-card"><h3>Video-resultaat</h3>'+media+'</div>';}
+if(r.ok&&(v.video_url||v.video)){const media=v.video_url?'<video controls playsinline style="width:100%" src="'+v.video_url+'"></video>':'<video controls playsinline style="width:100%" src="data:'+(v.mime_type||'video/mp4')+';base64,'+v.video+'"></video>';result.innerHTML='<div class="glass-card"><h3>Video-resultaat</h3>'+media+'</div>';}
 else{result.innerHTML='<div class="glass-card"><p>Mislukt: '+(d.detail||d.error||'Geen videoresultaat ontvangen.')+'</p></div>';}
 }catch(e){result.innerHTML='<div class="glass-card"><p>Video gateway niet bereikbaar.</p></div>';}
 }
