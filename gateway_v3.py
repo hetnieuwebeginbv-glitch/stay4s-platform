@@ -658,8 +658,18 @@ async def v1_stream(ws: WebSocket):
             if not prompt or len(prompt) > 12000:
                 await ws.send_json({"type": "error", "error": "prompt_required_or_too_long"})
                 continue
-            model = str(msg.get("model") or OLLAMA_CHAT_MODEL)
-            # Allow only locally installed models; prevents arbitrary provider/model routing.
+            mode = str(msg.get("model") or "snel").lower()
+            model_map = {
+                "snel": os.getenv("OLLAMA_CHAT_MODEL", OLLAMA_FALLBACK_MODEL),
+                "pro": os.getenv("OLLAMA_PRO_MODEL", os.getenv("OLLAMA_CHAT_MODEL", OLLAMA_FALLBACK_MODEL)),
+                "code": os.getenv("OLLAMA_CODE_MODEL", "qwen2.5-coder:7b"),
+                "scam": os.getenv("OLLAMA_SCAM_MODEL", os.getenv("OLLAMA_CHAT_MODEL", OLLAMA_FALLBACK_MODEL)),
+            }
+            model = model_map.get(mode)
+            if not model:
+                await ws.send_json({"type":"error","error":"unknown_model_mode","model":mode})
+                continue
+            # Model modes map to explicitly configured local models; no arbitrary provider routing.
             async with httpx.AsyncClient(timeout=90) as client:
                 check = await client.get(f"{OLLAMA_URL}/api/tags")
                 available = {m.get("name") for m in check.json().get("models", [])}
