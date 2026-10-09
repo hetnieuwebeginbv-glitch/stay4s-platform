@@ -222,6 +222,12 @@
       "impact": "high",
       "details": "Gateway legacy code gebruikt wildcard CORS en hardcoded demo key registry; de offline queue wordt lokaal in browser storage bewaard.",
       "risk": "Beperk CORS, migreer keys naar persistente klant/auth opslag, voeg abuse/concurrency controls toe en beoordeel browser opslag voor gevoelige berichten."
+    },
+    {
+      "title": "Kotlin berichtenfunctie is nog niet volledig end-to-end",
+      "impact": "high",
+      "details": "De Kotlin V3 bevat AI-chat via Gateway WebSocket en UI voor messaging login/contacten; de user-to-user message WebSocket flow en end-to-end compatibiliteit met de huidige messages-server zijn nog niet volledig gevalideerd.",
+      "risk": "Niet als afgeronde messaging release beschouwen voordat login, contacts, send/receive en reconnect op de echte messages-server getest zijn."
     }
   ],
   "ready_now": {
@@ -369,6 +375,11 @@
       "unknown": "De exacte actieve productieconfiguratie op Pi 5",
       "why_unknown": "Er is geen SSH/deployment uitgevoerd vanuit deze sessie.",
       "how_to_resolve": "Vergelijk staging branches met de actieve Pi 5 service en deployment files."
+    },
+    {
+      "unknown": "Kotlin user-to-user messaging WebSocket integration",
+      "why_unknown": "De build staat nog open en de echte login/contact/send/receive flow is nog niet getest tegen de actieve server.",
+      "how_to_resolve": "Bevestig de actieve messages-server base URL en test de /ws/{user_id} protocolflow met twee accounts."
     }
   ],
   "assumptions": [
