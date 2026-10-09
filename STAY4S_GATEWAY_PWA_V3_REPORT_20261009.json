@@ -3,7 +3,7 @@
     "name": "ChatGPT",
     "version": "GPT-6",
     "run_id": "stay4s-v3-20261009",
-    "timestamp_utc": "2026-10-09T13:53:00Z"
+    "timestamp_utc": "2026-10-09T13:55:00Z"
   },
   "summary": {
     "one_liner": "Gateway/PWA V3 uitbreidingen, Mollie checkout/webhook, Web Push, offline/PWA functies en 5.000-record trainingsdatagenerator zijn op een feature branch geïmplementeerd; Gateway tests zijn groen. Android build is nog in uitvoering. Niets is naar productie gedeployed.",
@@ -183,6 +183,19 @@
           "value": "https://github.com/hetnieuwebeginbv-glitch/stay4companion/actions/runs/37939841652"
         }
       ]
+    },
+    {
+      "title": "PWA API-key fallback verwijderd",
+      "details": "De PWA vraagt nu om een expliciet ingevoerde API-key en slaat die lokaal op; er wordt geen demo-key meer als standaard gebruikt.",
+      "artifacts": [
+        {
+          "type": "repo_commit",
+          "path_or_id": "446650a066e96195f2d0694b58bfbc2f9fd708f5",
+          "sha256": "",
+          "notes": "Feature branch update."
+        }
+      ],
+      "evidence": []
     }
   ],
   "findings": [
@@ -199,10 +212,10 @@
       "risk": "Endpoints geven een gecontroleerde fout terug wanneer providers niet geconfigureerd zijn."
     },
     {
-      "title": "Legacy PWA bevat een demo API-key als fallback",
+      "title": "Legacy Gateway bevat statische demo API-key entries",
       "impact": "high",
-      "details": "De bestaande bron bevat een demo credential en gebruikt die als fallback als er geen key lokaal is ingesteld.",
-      "risk": "Vervang demo-key gedrag en controleer key exposure voordat de PWA als publieke productinterface wordt gebruikt."
+      "details": "De PWA is aangepast zodat er geen demo-key meer in de browsercode wordt gebruikt als fallback; de legacy Gateway bron bevat nog wel statische demo-key entries in de API_KEYS registry.",
+      "risk": "Verwijder demo-key entries of beperk ze tot staging vóór productie."
     },
     {
       "title": "Productieconfiguratie heeft extra security review nodig",
