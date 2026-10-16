@@ -2,4 +2,10 @@
 01_FACTORY_ZIP/*.zip
 03_BACKUPS/*.tar.gz
 
+# Gevoelige bestanden - NOOIT committen
+*SUPER_COMMAND*.txt
+*.key
+*.pem
+*.token
+
 # Wel committen: documentatie, kleine configs
