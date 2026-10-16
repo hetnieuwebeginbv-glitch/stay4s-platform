@@ -1,0 +1,5 @@
+# Grote bestanden - niet voor GitHub
+01_FACTORY_ZIP/*.zip
+03_BACKUPS/*.tar.gz
+
+# Wel committen: documentatie, kleine configs
