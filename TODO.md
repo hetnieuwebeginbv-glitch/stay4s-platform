@@ -21,7 +21,7 @@
 | A-3 | Voorstel subdomain-bundeling schrijven (BESLUIT_... in inbox) | Droid | open |
 | A-4 | Security headers Cloudflare (CSP e.a.) | Droid | open (T4) |
 | A-5 | video.stay4s.com (530) herstellen | Droid | open (T3) |
-| A-6 | Spiegel commercial.db dagelijks naar SD (I-04) | Droid | open |
+| A-6 | Spiegel DBs dagelijks naar SD + storage-monitor elke 5 min | Droid | **DONE 17-10** (db_mirror.sh 03:30 + storage_monitor.sh */5, quick_check op 3 DBs ok) |
 | A-7 | Gateway 8130 publiek-voorstel (api. -> gateway ipv LiteLLM) | Droid | open |
 | A-8 | WhatsApp /chat contract documenteren in API-docs | OpenCode/Droid | gedaan-in-rapport, docs open |
 | A-9 | Sandbox-koppeling: terminal-dienst via stay4s-sandbox:1.0 | OpenCode | wacht op U-3 |
@@ -31,6 +31,7 @@
 - Idee? -> IDEEEN_EN_BACKLOG.md. Actieve taak? -> hier.
 - Voltooide taken: status -> DONE met datum, niet weggooien (historie).
 - Wijzigingen via de inbox-documenten; dit bestand is de enige bron.
+
 
 
 
