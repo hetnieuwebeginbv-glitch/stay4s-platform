@@ -7,8 +7,8 @@
 | # | Taak | Waarom | Status |
 |---|------|--------|--------|
 | U-1 | 2e Pi fysiek checken: stroom aan? kabel of WiFi? lampjes? | hij is onzichtbaar op het netwerk; zonder dit kan niemand hem herstellen | open |
-| U-2 | USB-kabel dataschijf (usb4) vervangen of stevig herplaatsen, evt. gevoede hub | oorzaak incident 17-10; anders gebeurt het weer | open |
-| U-3 | OpenCode herstellen: `opencode auth login` draaien | zijn API-key geeft 401; hij is nu uit de roulatie | open |
+| U-2 | USB-kabel dataschijf (usb4) vervangen of stevig herplaatsen, evt. gevoede hub | oorzaak incident 17-10; anders gebeurt het weer | open — NA RUIL: zeg "kabel vervangen", Droid doet 10-min dmesg-bewaking + stresstest |
+| U-3 | OpenCode herstellen: terminal openen (Win+R -> wt), `opencode auth login`, kies opencode, volg browser | zijn API-key geeft 401; interactief, Droid kan dit NIET remote | open — 30 sec werk |
 | U-4 | Beslissen: RunPod wel/niet gebruiken (key is 401) | blokkeert serverless model-hosting | open |
 | U-5 | Mollie live-key regelen (mollie.com dashboard) | blokkeert echte betalingen / subscribe-flow | open |
 | U-6 | Beslissen: mag Droid subdomain-bundeling 45->8 doorvoeren | wacht op jouw OK na voorstel | open |
@@ -31,3 +31,4 @@
 - Idee? -> IDEEEN_EN_BACKLOG.md. Actieve taak? -> hier.
 - Voltooide taken: status -> DONE met datum, niet weggooien (historie).
 - Wijzigingen via de inbox-documenten; dit bestand is de enige bron.
+
