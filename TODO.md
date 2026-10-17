@@ -8,7 +8,7 @@
 |---|------|--------|--------|
 | U-1 | 2e Pi fysiek checken: stroom aan? kabel of WiFi? lampjes? | hij is onzichtbaar op het netwerk; zonder dit kan niemand hem herstellen | open |
 | U-2 | USB-kabel dataschijf (usb4) vervangen of stevig herplaatsen, evt. gevoede hub | oorzaak incident 17-10; anders gebeurt het weer | open — NA RUIL: zeg "kabel vervangen", Droid doet 10-min dmesg-bewaking + stresstest |
-| U-3 | OpenCode herstellen: nieuwe API-key | Droid heeft key direct in auth.json geinstalleerd + gevalideerd (HTTP 200) | **DONE 17-10** |
+| U-3 | OpenCode herstellen: nieuwe API-key | key geinstalleerd + geldig (stream start), MAAR account-saldo is op: "Insufficient account funds" | **open — tegoed opwaarderen in opencode.ai console > Billing, daarna werkt alles** |
 | U-4 | Beslissen: RunPod wel/niet gebruiken (key is 401) | blokkeert serverless model-hosting | open |
 | U-5 | Mollie live-key regelen (mollie.com dashboard) | blokkeert echte betalingen / subscribe-flow | open |
 | U-6 | Beslissen: mag Droid subdomain-bundeling 45->8 doorvoeren | wacht op jouw OK na voorstel | open |
@@ -31,5 +31,6 @@
 - Idee? -> IDEEEN_EN_BACKLOG.md. Actieve taak? -> hier.
 - Voltooide taken: status -> DONE met datum, niet weggooien (historie).
 - Wijzigingen via de inbox-documenten; dit bestand is de enige bron.
+
 
 
