@@ -18,6 +18,7 @@
 | I-07 | mnt-usb3 fstab-regel: bevestigd verwijderd 17-10 | — | — | done | — |
 | I-08 | Nieuwe 4TB externe schijf als Pi-dataopslag (vervangt stick-bos) | HOOG | MIDDEN | Droid + gebruiker | schijf komt 18-10; ext4, rsync-migratie usb4, fstab UUID, 5 min downtime |
 | I-09 | K:-backups (7,8TB PC) spiegelen naar Pi 4TB (selectief) | MIDDEN | MIDDEN | Droid | echte redundantie: PC + Pi (+ evt. cloud) |
+| I-10 | NVMe HAT (Pineboards HatDrive! Top ~EUR23 bij welectron.com) + 500GB NVMe (~EUR45) | HOOG | MIDDEN | gebruiker koopt, Droid installeert | PCIe direct ~800MB/s, booten van NVMe, geen USB-laag in kritiek pad; NVMe=OS/kritiek, 4TB=bulk/backup, SD=bootloader |
 
 ## Platform & Cloudflare (lane Droid, W3)
 | # | Idee | Waarde | Moeite | Opmerking |
@@ -52,4 +53,5 @@
 | D-01 | ECOSYSTEEM_REGISTER bijhouden (OpenCode schrijft) | HOOG | loopt | correcties via inboxen |
 | D-02 | Dit ideeen-register tonen in dashboard + GitHub | MIDDEN | KLEIN | gedaan 17-10 |
 | D-03 | Wekelijkse automatische backlog-review | LAAG | KLEIN | kan later via automatisering |
+
 
