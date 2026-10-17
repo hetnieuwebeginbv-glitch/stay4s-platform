@@ -16,6 +16,8 @@
 | I-05 | HP Z400 als AOSP/ROM build-server | MIDDEN | MIDDEN | Droid | ROM-builds gratis ipv Vast-huur; eerst RAM/schijf checken |
 | I-06 | Kali Linux als VM/live-USB op Z400 | LAAG | KLEIN | Droid | voor Scam-Shield B2B security-demo's |
 | I-07 | mnt-usb3 fstab-regel: bevestigd verwijderd 17-10 | — | — | done | — |
+| I-08 | Nieuwe 4TB externe schijf als Pi-dataopslag (vervangt stick-bos) | HOOG | MIDDEN | Droid + gebruiker | schijf komt 18-10; ext4, rsync-migratie usb4, fstab UUID, 5 min downtime |
+| I-09 | K:-backups (7,8TB PC) spiegelen naar Pi 4TB (selectief) | MIDDEN | MIDDEN | Droid | echte redundantie: PC + Pi (+ evt. cloud) |
 
 ## Platform & Cloudflare (lane Droid, W3)
 | # | Idee | Waarde | Moeite | Opmerking |
@@ -50,3 +52,4 @@
 | D-01 | ECOSYSTEEM_REGISTER bijhouden (OpenCode schrijft) | HOOG | loopt | correcties via inboxen |
 | D-02 | Dit ideeen-register tonen in dashboard + GitHub | MIDDEN | KLEIN | gedaan 17-10 |
 | D-03 | Wekelijkse automatische backlog-review | LAAG | KLEIN | kan later via automatisering |
+
