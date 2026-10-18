@@ -1,0 +1,21 @@
+[Unit]
+Description=Stay4S Scam-Check API (scam.stay4s.com, poort 8100)
+After=network-online.target
+Wants=network-online.target
+# BEWUST geen /mnt/usb4-dependency: draait volledig op SD (/opt/stay4s)
+
+[Service]
+Type=simple
+User=Miesdevries
+Environment=SCAM_MODEL_DIR=/opt/stay4s/models/scam-v2
+Environment=SCAM_SITE_HTML=/opt/stay4s/scam/scam.html
+Environment=SCAM_PORT=8100
+ExecStart=/opt/stay4s/scam/venv/bin/python3 /opt/stay4s/scam/scam_api.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
