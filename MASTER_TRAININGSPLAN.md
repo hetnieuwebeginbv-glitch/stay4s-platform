@@ -39,9 +39,9 @@
 - Acceptatie: /api/image/generate levert Stay4S-stijl beeld; video blijft skeleton
 - Commercieel: content-dienst (EUR 49-tier) krijgt beeld erbij
 
-## FASE 5 — Multi-GPU (code DONE; 2x 4090 bewijs zodra Vast API-key binnen is)
+## FASE 5 — Multi-GPU (DONE 18-10: DDP + resume bewezen op 2x 4090)
 - Gedaan: train_ddp.py (torchrun/NCCL, per-rank seeds, no_sync accum, --init-from resume). NIEUWE VOLGORDE (Mitchell): F5 hardware-bewijs VOOR F7
-- 1-GPU-validatie: draait nu FEITELIJK als Fase 6-runner (DDP-code in productie). Nog te doen: 2x 4090 DDP-bewijs (~$2-3) zodra Vast API-key binnen is
+- BEWEZEN op Vast 56618183 (2x RTX 4090 48GB): DDP 1,5x schaling (12.775->19.100 tok/s), beide GPU 99%, resume-onder-DDP correct (hervat iter 30, val 6.74->6.73). Host-note: blokkeert DNS-egress (UDP53) - offline wheels gebruiken
 - Acceptatie: reproduceer middel-run (110M) met zelfde val loss +/- 0.05
 
 ## FASE 6 — Pre-train verfijning op 791M tokens (LOOPT, val 4.07->2.74, grens 2.8 al gepasseerd)
