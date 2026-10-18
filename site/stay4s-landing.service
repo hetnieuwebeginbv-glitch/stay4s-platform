@@ -1,0 +1,18 @@
+[Unit]
+Description=Stay4S Landing (commerciele homepage, poort 8161)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=Miesdevries
+Environment=LANDING_PORT=8161
+ExecStart=/opt/stay4s/scam/venv/bin/python3 /opt/stay4s/landing/landing_server.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
