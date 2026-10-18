@@ -130,10 +130,18 @@ function addTip(t){ var li=document.createElement("li"); li.textContent=t; docum
 function deel() {
   if (!laatste) return;
   var pct = Math.round((laatste.score||0)*100);
-  var tekst = "⚠️ Scam-Check: " + pct + "% kans op oplichting in dit bericht. Check zelf ook op https://scam.stay4s.com";
+  var tekst;
+  if (laatste.verdict === "scam") {
+    tekst = "⚠️ Scam-Check: " + pct + "% kans op oplichting in dit bericht! Check jouw bericht ook: https://scam.stay4s.com";
+  } else if (laatste.verdict === "verdacht") {
+    tekst = "🤔 Scam-Check: dit bericht is verdacht (" + pct + "% kans op oplichting). Check zelf ook: https://scam.stay4s.com";
+  } else {
+    tekst = "✅ Scam-Check: dit bericht ziet er betrouwbaar uit (" + (100-pct) + "% ok). Heb jij een verdacht bericht? Check hem gratis: https://scam.stay4s.com";
+  }
   if (navigator.clipboard) { navigator.clipboard.writeText(tekst); }
   var b = event.target; b.textContent = "✅ Gekopieerd — plak het in je app"; setTimeout(function(){ b.textContent = "📤 Deel deze uitslag"; }, 2500);
 }
 </script>
 </body>
 </html>
+
