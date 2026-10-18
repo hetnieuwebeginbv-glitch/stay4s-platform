@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scam-Check — Stay4S | Is dit bericht nep?</title>
+<meta name="description" content="Plak een verdacht bericht en weet binnen 3 seconden of het oplichting is. Gratis, zonder account, data blijft in Nederland.">
+<style>
+:root { --bg:#0f172a; --card:#1e293b; --card2:#16213e; --border:#334155; --text:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --green:#22c55e; --yellow:#eab308; --red:#ef4444; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'Segoe UI',Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; min-height:100vh; }
+.wrap { max-width:720px; margin:0 auto; padding:0 18px; }
+header { text-align:center; padding:40px 0 10px; }
+.logo { font-size:24px; font-weight:800; }
+.logo span { color:var(--accent); }
+h1 { font-size:32px; margin:26px 0 8px; }
+.sub { color:var(--muted); margin-bottom:26px; }
+.box { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:24px; }
+textarea { width:100%; min-height:150px; background:var(--card2); border:1px solid var(--border); border-radius:12px; color:var(--text); font-size:15px; padding:14px; resize:vertical; font-family:inherit; }
+textarea:focus { outline:none; border-color:var(--accent); }
+.rij { display:flex; gap:12px; margin-top:14px; align-items:center; }
+.btn { padding:13px 26px; border-radius:10px; font-weight:700; font-size:15px; border:none; cursor:pointer; background:var(--green); color:#052e16; }
+.btn:hover { background:#4ade80; }
+.btn[disabled] { opacity:.6; cursor:wait; }
+.voorbeeld { background:none; border:none; color:var(--accent); cursor:pointer; font-size:13px; text-decoration:underline; padding:0; }
+.resultaat { margin-top:22px; border-radius:14px; padding:22px; display:none; }
+.resultaat.scam { background:rgba(239,68,68,.12); border:1px solid var(--red); }
+.resultaat.verdacht { background:rgba(234,179,8,.12); border:1px solid var(--yellow); }
+.resultaat.ok { background:rgba(34,197,94,.12); border:1px solid var(--green); }
+.uitslag { font-size:22px; font-weight:800; margin-bottom:6px; }
+.score-balk { background:var(--card2); border-radius:8px; height:14px; overflow:hidden; margin:12px 0; }
+.score-vulling { height:100%; border-radius:8px; transition:width .6s ease; }
+.uitleg { font-size:14px; color:var(--text); margin:8px 0; }
+.tips { font-size:13px; color:var(--muted); margin-top:10px; }
+.tips li { margin-left:20px; }
+.deel { margin-top:14px; background:var(--card2); border:1px solid var(--border); color:var(--text); padding:9px 16px; border-radius:8px; cursor:pointer; font-size:13px; }
+.deel:hover { border-color:var(--accent); }
+.fout { color:var(--red); font-size:14px; margin-top:12px; display:none; }
+.info { margin-top:34px; display:grid; gap:12px; }
+.info .kaart { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 18px; font-size:14px; }
+.info .kaart b { color:var(--accent); }
+footer { text-align:center; color:var(--muted); font-size:12px; padding:30px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="logo" href="https://stay4s.com" style="color:var(--text);text-decoration:none">Stay4<span>S</span> Scam-Check</a>
+    <h1>Is dit bericht nep?</h1>
+    <p class="sub">Plak het bericht hieronder. Onze Nederlandse AI geeft je binnen 3 seconden een eerlijke uitslag.<br>🔒 Je bericht wordt niet opgeslagen en verlaat Nederland nooit.</p>
+  </header>
+
+  <div class="box">
+    <textarea id="bericht" placeholder="Plak hier het verdachte WhatsApp-bericht, sms'je of de e-mail..."></textarea>
+    <div class="rij">
+      <button class="btn" id="checkBtn" onclick="check()">🛡️ Check dit bericht</button>
+      <button class="voorbeeld" onclick="vulVoorbeeld()">probeer een voorbeeld</button>
+    </div>
+    <div class="fout" id="fout"></div>
+
+    <div class="resultaat" id="resultaat">
+      <div class="uitslag" id="uitslag"></div>
+      <div class="score-balk"><div class="score-vulling" id="vulling"></div></div>
+      <div class="uitleg" id="uitleg"></div>
+      <ul class="tips" id="tips"></ul>
+      <button class="deel" onclick="deel()">📤 Deel deze uitslag</button>
+    </div>
+  </div>
+
+  <div class="info">
+    <div class="kaart">🚨 <b>Herken oplichting:</b> spoed ("nu betalen!"), onbekende links, "nieuw nummer" van familie, te mooie aanbiedingen, en betaalverzoeken via vreemde rekeningen.</div>
+    <div class="kaart">🏦 <b>Gouden regel:</b> bij twijfel nooit klikken of betalen. Bel de echte organisatie via het nummer op hun officiële site.</div>
+    <div class="kaart">🇳🇱 <b>Over deze check:</b> ons eigen model is getraind op duizenden NL/EN-scams en draait op eigen hardware in Nederland. Meer op <a href="https://stay4s.com">stay4s.com</a>.</div>
+  </div>
+
+  <footer>© 2026 Stay4S · Het Nieuwe Begin BV · Gratis dienst — deel hem met wie je lief is 💙</footer>
+</div>
+
+<script>
+var laatste = null;
+function vulVoorbeeld() {
+  document.getElementById("bericht").value = "Hoi mam, mijn telefoon is kapot, dit is mijn nieuwe nummer. Kun je even 850 euro overmaken naar NL91RABO0123456789? Moet vandaag nog betaald worden anders krijg ik een boete. Alvast bedankt!";
+}
+function check() {
+  var tekst = document.getElementById("bericht").value.trim();
+  var fout = document.getElementById("fout");
+  fout.style.display = "none";
+  if (tekst.length < 10) { fout.textContent = "Plak eerst een bericht (minimaal 10 tekens)."; fout.style.display = "block"; return; }
+  var btn = document.getElementById("checkBtn");
+  btn.disabled = true; btn.textContent = "⏳ Bezig...";
+  fetch("/check", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({text: tekst})
+  })
+  .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+  .then(function(d){ toon(d); })
+  .catch(function(e){ fout.textContent = "De check is tijdelijk niet bereikbaar. Probeer het zo nog eens."; fout.style.display = "block"; })
+  .finally(function(){ btn.disabled = false; btn.textContent = "🛡️ Check dit bericht"; });
+}
+function toon(d) {
+  laatste = d;
+  var r = document.getElementById("resultaat");
+  var pct = Math.round((d.score || 0) * 100);
+  r.className = "resultaat " + d.verdict;
+  r.style.display = "block";
+  var u = document.getElementById("uitslag");
+  var v = document.getElementById("vulling");
+  var tips = document.getElementById("tips");
+  tips.innerHTML = "";
+  if (d.verdict === "scam") {
+    u.textContent = "⚠️ " + pct + "% kans op oplichting — NIET op reageren";
+    v.style.width = pct + "%"; v.style.background = "var(--red)";
+    document.getElementById("uitleg").textContent = "Dit bericht vertoont sterke kenmerken van oplichting.";
+    ["Klik op niets en betaal niets.","Bel de afzender via een nummer dat je al had.","Meld het bij fraudehelpdesk.nl"].forEach(addTip);
+  } else if (d.verdict === "verdacht") {
+    u.textContent = "🤔 Verdacht (" + pct + "%) — wees extra alert";
+    v.style.width = pct + "%"; v.style.background = "var(--yellow)";
+    document.getElementById("uitleg").textContent = "Dit bericht heeft enkele verdachte kenmerken. Controleer het zelf goed.";
+    ["Controleer de afzender via een officieel kanaal.","Klik niet direct op links."].forEach(addTip);
+  } else {
+    u.textContent = "✅ Ziet er betrouwbaar uit (" + (100-pct) + "% ok)";
+    v.style.width = (100-pct) + "%"; v.style.background = "var(--green)";
+    document.getElementById("uitleg").textContent = "Geen duidelijke scam-kenmerken gevonden. Blijf altijd alert bij betaalverzoeken.";
+    ["Geen check is 100% — bij twijfel toch navragen."].forEach(addTip);
+  }
+  r.scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+function addTip(t){ var li=document.createElement("li"); li.textContent=t; document.getElementById("tips").appendChild(li); }
+function deel() {
+  if (!laatste) return;
+  var pct = Math.round((laatste.score||0)*100);
+  var tekst = "⚠️ Scam-Check: " + pct + "% kans op oplichting in dit bericht. Check zelf ook op https://scam.stay4s.com";
+  if (navigator.clipboard) { navigator.clipboard.writeText(tekst); }
+  var b = event.target; b.textContent = "✅ Gekopieerd — plak het in je app"; setTimeout(function(){ b.textContent = "📤 Deel deze uitslag"; }, 2500);
+}
+</script>
+</body>
+</html>
