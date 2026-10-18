@@ -37,3 +37,5 @@
 
 
 
+
+> Update 2026-10-18 (Droid): U-1 deels — 2e Pi is ONLINE op 192.168.8.141 (MAC bevestigd RPi, poort 22 open) maar geen werkende login; wacht op juiste wachtwoord OF fysieke key-install. Nieuw: A-11 = scam.stay4s.com bouwen+deployen (Droid) — STAGING KLAAR: classifier v2 op K: (541MB), scam_api.py + scam.html + systemd-unit + deploy_scam.sh in K:\stay4s\SITE_NIEUW\; livegang na OpenCode-migratie. Let op: CF-tunnel ingress voor scam -> http://localhost:8100 nodig (dashboard of token met Tunnel-recht). Reus (514M): iter 2500/6000, val 3.6562, ETA ~18:00.
