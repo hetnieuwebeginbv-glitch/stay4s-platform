@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stay4S — Bescherm jezelf tegen AI-oplichting</title>
+<meta name="description" content="Stay4S checkt verdachte berichten op oplichting met eigen Nederlandse AI. Gratis Scam-Check, geen account nodig. Jouw data blijft in Nederland.">
+<style>
+:root { --bg:#0f172a; --card:#1e293b; --card2:#16213e; --border:#334155; --text:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --green:#22c55e; --yellow:#eab308; --red:#ef4444; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'Segoe UI',Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+a { color:var(--accent); text-decoration:none; }
+.wrap { max-width:1100px; margin:0 auto; padding:0 20px; }
+nav { position:sticky; top:0; z-index:50; background:rgba(15,23,42,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); }
+nav .wrap { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; }
+.logo { font-size:22px; font-weight:800; color:var(--text); }
+.logo span { color:var(--accent); }
+nav .links a { margin-left:18px; font-size:14px; color:var(--muted); }
+nav .links a:hover { color:var(--text); }
+.btn { display:inline-block; padding:13px 28px; border-radius:10px; font-weight:700; font-size:15px; border:none; cursor:pointer; }
+.btn-groen { background:var(--green); color:#052e16; }
+.btn-groen:hover { background:#4ade80; }
+.btn-ghost { background:transparent; color:var(--text); border:1px solid var(--border); }
+.btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
+.hero { text-align:center; padding:90px 20px 60px; background:radial-gradient(ellipse 60% 50% at 50% 0%, rgba(56,189,248,.12), transparent); }
+.hero h1 { font-size:44px; line-height:1.15; max-width:760px; margin:0 auto 18px; }
+.hero h1 .accent { color:var(--accent); }
+.hero p { font-size:18px; color:var(--muted); max-width:620px; margin:0 auto 30px; }
+.hero .ctas { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+.trust { margin-top:26px; font-size:13px; color:var(--muted); }
+.trust b { color:var(--green); }
+section { padding:64px 0; }
+h2 { font-size:30px; text-align:center; margin-bottom:10px; }
+.sub { text-align:center; color:var(--muted); margin-bottom:40px; font-size:16px; }
+.grid3 { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; }
+.card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:26px; }
+.card h3 { font-size:19px; margin-bottom:8px; color:var(--accent); }
+.card .prijs { font-size:32px; font-weight:800; margin:12px 0 4px; }
+.card .prijs small { font-size:14px; color:var(--muted); font-weight:400; }
+.card ul { list-style:none; margin:16px 0 22px; }
+.card ul li { padding:5px 0 5px 26px; position:relative; font-size:14px; color:var(--text); }
+.card ul li:before { content:"\2713"; position:absolute; left:0; color:var(--green); font-weight:700; }
+.card.populair { border-color:var(--green); box-shadow:0 0 30px rgba(34,197,94,.12); position:relative; }
+.badge { position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--green); color:#052e16; font-size:11px; font-weight:800; padding:4px 14px; border-radius:20px; }
+.stappen { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px; }
+.stap { text-align:center; padding:26px 18px; }
+.stap .nr { width:46px; height:46px; border-radius:50%; background:var(--card2); border:2px solid var(--accent); color:var(--accent); font-weight:800; font-size:19px; display:flex; align-items:center; justify-content:center; margin:0 auto 14px; }
+.stap h3 { font-size:17px; margin-bottom:6px; }
+.stap p { font-size:14px; color:var(--muted); }
+.team-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; }
+.agent { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; font-size:14px; }
+.agent .naam { font-weight:700; margin-bottom:2px; }
+.agent .rol { color:var(--muted); font-size:12px; margin-bottom:8px; }
+.dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; }
+.dot.on { background:var(--green); box-shadow:0 0 8px var(--green); }
+.dot.off { background:var(--red); }
+.privacy { background:var(--card2); border:1px solid var(--border); border-radius:16px; padding:40px; text-align:center; }
+.privacy h2 { margin-bottom:14px; }
+.privacy p { color:var(--muted); max-width:680px; margin:0 auto; font-size:15px; }
+footer { border-top:1px solid var(--border); padding:30px 0; margin-top:30px; }
+footer .wrap { display:flex; justify-content:space-between; flex-wrap:wrap; gap:14px; font-size:13px; color:var(--muted); }
+@media (max-width:640px){ .hero h1{font-size:30px;} }
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a class="logo" href="/">Stay4<span>S</span></a>
+  <div class="links">
+    <a href="https://scam.stay4s.com">Scam-Check</a>
+    <a href="#producten">Producten</a>
+    <a href="#team">Ons team</a>
+    <a href="https://app.stay4s.com">Inloggen</a>
+  </div>
+</div></nav>
+
+<header class="hero">
+  <h1>Is dit bericht <span class="accent">nep</span>?<br>Check het in 3 seconden.</h1>
+  <p>Stay4S herkent oplichting in WhatsApp, sms en e-mail met eigen Nederlandse AI. Gratis, zonder account, en je bericht verlaat Nederland nooit.</p>
+  <div class="ctas">
+    <a class="btn btn-groen" href="https://scam.stay4s.com">🛡️ Gratis Scam-Check</a>
+    <a class="btn btn-ghost" href="#producten">Bekijk producten</a>
+  </div>
+  <div class="trust">✅ Geen account nodig &nbsp;·&nbsp; ✅ <b>Data blijft in Nederland</b> &nbsp;·&nbsp; ✅ Gebouwd door een Nederlands team van mensen én AI</div>
+</header>
+
+<section id="hoe">
+  <div class="wrap">
+    <h2>Zo werkt het</h2>
+    <p class="sub">Van verdacht bericht naar zekerheid in drie stappen</p>
+    <div class="stappen">
+      <div class="stap"><div class="nr">1</div><h3>Plak het bericht</h3><p>Kopieer het verdachte WhatsApp-bericht, sms'je of de e-mail naar onze checker.</p></div>
+      <div class="stap"><div class="nr">2</div><h3>Onze AI analyseert</h3><p>Ons eigen model, getraind op duizenden Nederlandse en Engelse scams, beoordeelt het in milliseconden.</p></div>
+      <div class="stap"><div class="nr">3</div><h3>Direct duidelijkheid</h3><p>Je krijgt een score met uitleg én concrete tips. Deel de uitslag met wie je wilt beschermen.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="producten">
+  <div class="wrap">
+    <h2>Producten</h2>
+    <p class="sub">Begin gratis. Upgrade als je meer wilt.</p>
+    <div class="grid3">
+      <div class="card">
+        <h3>Scam-Check</h3>
+        <div class="prijs">€0 <small>/ altijd</small></div>
+        <ul>
+          <li>Onbeperkt berichten checken</li>
+          <li>Direct scam-score + uitleg</li>
+          <li>Deelbare uitslag voor familie</li>
+          <li>Geen account nodig</li>
+        </ul>
+        <a class="btn btn-groen" style="width:100%;text-align:center" href="https://scam.stay4s.com">Start gratis check</a>
+      </div>
+      <div class="card populair">
+        <div class="badge">BINNENKORT</div>
+        <h3>Stay4S Plus</h3>
+        <div class="prijs">€4,99 <small>/ maand</small></div>
+        <ul>
+          <li>Alles van Scam-Check</li>
+          <li>Bescherming voor het hele gezin</li>
+          <li>Persoonlijk dashboard + meldingen</li>
+          <li>AI-chat die Nederlands spreekt</li>
+          <li>Prioriteit-support</li>
+        </ul>
+        <a class="btn btn-ghost" style="width:100%;text-align:center" href="mailto:info@stay4s.com?subject=Stay4S%20Plus">Zet me op de lijst</a>
+      </div>
+      <div class="card">
+        <h3>Business API</h3>
+        <div class="prijs">Maatwerk</div>
+        <ul>
+          <li>Scam-detectie in jullie eigen systemen</li>
+          <li>REST API met sleutels en quota</li>
+          <li>Nederlandse hosting, GDPR-proof</li>
+          <li>Voor webshops, gemeenten en zorg</li>
+        </ul>
+        <a class="btn btn-ghost" style="width:100%;text-align:center" href="mailto:info@stay4s.com?subject=Business%20API">Neem contact op</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="team">
+  <div class="wrap">
+    <h2>Ons team — mensen én AI</h2>
+    <p class="sub">Bij Stay4S werken AI-agenten als collega's. Live status:</p>
+    <div class="team-grid" id="team-grid">
+      <div class="agent"><div class="naam">🛡️ Scam-Shield</div><div class="rol">Herkent oplichting</div><span class="dot on" data-s="scam"></span><span class="st">actief</span></div>
+      <div class="agent"><div class="naam">💬 Chat-Agent</div><div class="rol">Nederlandse AI-assistent</div><span class="dot on" data-s="chat"></span><span class="st">actief</span></div>
+      <div class="agent"><div class="naam">🎬 Media-Agent</div><div class="rol">Genereert beeld en video</div><span class="dot on" data-s="video"></span><span class="st">actief</span></div>
+      <div class="agent"><div class="naam">🧠 Stay4S-LM</div><div class="rol">Ons eigen taalmodel (in training)</div><span class="dot on"></span><span class="st">leert elke dag bij</span></div>
+    </div>
+    <p class="sub" style="margin-top:18px;font-size:13px">Ja, dit lees je goed: wij tonen onze AI-collega's gewoon live. Transparantie hoort erbij.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="privacy">
+      <h2>🇳🇱 Nederlands eigen brein</h2>
+      <p>Stay4S traint en draait zijn eigen AI-modellen op eigen hardware in Nederland. Je berichten gaan niet naar Amerika, worden niet gebruikt om mee te trainen, en zijn verwijderbaar wanneer jij wilt. Privacy is bij ons geen kleine lettertjes — het is het product.</p>
+    </div>
+  </div>
+</section>
+
+<footer><div class="wrap">
+  <div>© 2026 Stay4S · Het Nieuwe Begin BV</div>
+  <div><a href="mailto:info@stay4s.com">info@stay4s.com</a> · <a href="https://ui.stay4s.com/todo">Roadmap (live)</a> · <a href="https://ui.stay4s.com/ideeen">Ideeën</a></div>
+</div></footer>
+</body>
+</html>
