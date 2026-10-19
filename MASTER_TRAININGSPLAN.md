@@ -1,7 +1,7 @@
 # STAY4S — MASTER TRAININGSPLAN
 > Alle trainingstactieken in de juiste volgorde. Eerst bestaande pijplijnen afmaken, cluster-ladder (16-8-6-4-3) als laatste grote stap.
 > Regel: een fase start pas als de vorige groen is. Kostenposten > EUR 50 vereisen gebruikers-GO.
-> Laatst bijgewerkt: 2026-10-18 avond (Droid) — F0/F1/F2a DONE, F6 loopt boven verwachting, F5-code klaar | Eigenaar uitvoering: Droid (Vast.ai), OpenCode (Pi/eval)
+> Laatst bijgewerkt: 2026-10-19 middag (Droid) — F0/F1/F2a DONE, F6 loopt boven verwachting, F5-code klaar | Eigenaar uitvoering: Droid (Vast.ai), OpenCode (Pi/eval)
 
 ## Huidige staat (baseline)
 - Ladder Stay4S-LM-001 (from-scratch, tokenizer 32k, NL/EN 50/50, 74M tokens):
@@ -44,8 +44,8 @@
 - BEWEZEN op Vast 56618183 (2x RTX 4090 48GB): DDP 1,5x schaling (12.775->19.100 tok/s), beide GPU 99%, resume-onder-DDP correct (hervat iter 30, val 6.74->6.73). Host-note: blokkeert DNS-egress (UDP53) - offline wheels gebruiken
 - Acceptatie: reproduceer middel-run (110M) met zelfde val loss +/- 0.05
 
-## FASE 6 — Pre-train verfijning op 791M tokens (LOOPT, val 4.07->2.74, grens 2.8 al gepasseerd)
-- reus hervat vanaf ckpt_best (iter 6000->18100, lr 3e-4, verse cosine). Tussenstand iter 7500: val 4.07 -> 2.7355 — acceptatiegrens 2.8 al GEPASSEERD. ETA 19-10 ~12:00
+## FASE 6 — Pre-train verfijning op 791M tokens (DONE 19-10: beste val 2.5597, ppl 14.97)
+- reus hervat vanaf ckpt_best (iter 6000->18100, lr 3e-4, verse cosine). KLAAR 19-10 13:33 UTC na 61.907s. Beste val 2.5597 (iter 14500) vs reus-baseline 3.3441. Eval: ppl 28.10 -> 14.97, cloze 0/32 -> 5/32, rep-4 0.011 -> 0.000. GGUF v2 gebouwd (Q4_K_M 342MB, logits-verified 7.6e-06)
 - Acceptatie: val < 2.8 (al bereikt bij iter 7000-7500). Daarna: groot ook op 791M? Beslissen na reus-resultaat
 
 ## FASE 7 — CLUSTER-LADDER (16-8-6-4-3) — LAATST, NA GO + BUDGET
