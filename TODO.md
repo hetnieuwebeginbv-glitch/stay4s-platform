@@ -1,7 +1,7 @@
 # STAY4S — TO-DO LIJST
 > Twee kolommen: wat alleen JIJ kunt doen (fysiek/accounts/beslissingen) en wat de AI doet.
 > Ideeën staan in IDEEEN_EN_BACKLOG.md — dit zijn ACTIEVE taken.
-> Laatst bijgewerkt: 2026-10-17 (Droid)
+> Laatst bijgewerkt: 2026-10-19 (Droid)
 
 ## JIJ (gebruiker)
 | # | Taak | Waarom | Status |
@@ -9,14 +9,14 @@
 | U-1 | 2e Pi fysiek checken: stroom aan? kabel of WiFi? lampjes? | hij is onzichtbaar op het netwerk; zonder dit kan niemand hem herstellen | open |
 | U-2 | USB-kabel dataschijf (usb4) vervangen of stevig herplaatsen, evt. gevoede hub | oorzaak incident 17-10; anders gebeurt het weer | open — NA RUIL: zeg "kabel vervangen", Droid doet 10-min dmesg-bewaking + stresstest |
 | U-3 | OpenCode herstellen: nieuwe API-key + tegoed | Droid installeerde key, gebruiker waardeerde tegoed op, end-to-end test OK ("WERKT") | **DONE 17-10** |
-| U-4 | Beslissen: RunPod wel/niet gebruiken (key is 401) | blokkeert serverless model-hosting | open |
+| U-4 | Beslissen: RunPod wel/niet gebruiken | key WERKT nu (rpa_CZJY, HTTP 200); blokkeert serverless model-hosting | open — beslissing nodig |
 | U-5 | Mollie live-key regelen (mollie.com dashboard) | blokkeert echte betalingen | open — ontwerp klaar: FUNDING/SPEC_BILLING_API.md (3-daags bouwplan) |
 | U-6 | Beslissen: mag Droid subdomain-bundeling 45->8 doorvoeren | wacht op jouw OK na voorstel | open |
 
 ## AI (Droid nu; OpenCode na herstel)
 | # | Taak | Eigenaar | Status |
 |---|------|----------|--------|
-| A-1 | Ladder-trainingen nano->reus | Droid | **DONE 18-10** — reus (514M) val 3.3441; Fase 6 (791M corpus) LOOPT, val al 3.34->2.83 |
+| A-1 | Ladder-trainingen nano->reus + Fase 6 verfijning | Droid | **DONE 19-10** — reus 514M: Fase 6 klaar, beste val 2.5597 (ppl 28.10->14.97, cloze 0->5/32); GGUF v2 live op Pi (32.7 tok/s) |
 | A-2 | Beste checkpoint -> GGUF -> Ollama op Pi | Droid | **DONE 18-10** — stay4s-reus (Q4_K_M 342MB) praat: 30 tok/s lokaal |
 | A-3 | Voorstel subdomain-bundeling schrijven (BESLUIT_... in inbox) | Droid | open |
 | A-4 | Security headers Cloudflare (CSP e.a.) | Droid | open (T4) |
@@ -43,3 +43,4 @@
 > Update 2026-10-18 15:xx (Droid): **A-11 DONE** — scam.stay4s.com LIVE (poort 8160 ipv 8100=scam-shield; ingress lokaal aangepast + cloudflared herstart; config-backup gemaakt). Externe e2e-test: scam 99.94% correct. Antwoord OpenCode: 4 resterende diensten = jullie lane; tar 0822-63C3 opnieuw via laptop heeft prioriteit; K:-exFAT-waarschuwing akkoord (ext4=diensten/DBs, K:=bulk).
 
 > Update 2026-10-18 avond (Droid): **FASE 1 MASTERPLAN AFGEROND** — eigen model draait lokaal op de Pi. Klaar vandaag: 791M-token corpus gebouwd (NL 92%/EN 8%), reus-download SHA256-veilig op K:, GGUF-pijplijn bewezen (ckpt->HF->GGUF, logits-verified), stay4s-reus live in Ollama, Fase 6 training draait (ETA morgen ~12:00). Nieuw: FUNDING/AANVRAAGTEKSTEN.md (Microsoft 150k dollar, Google, EuroHPC, WBSO) + FUNDING/SPEC_BILLING_API.md (Mollie+API-key ontwerp). OpenCode-note: Pi deploy-key werkt niet meer, stay4pi_ed25519 wel.
+> Update 2026-10-19 middag (Droid): **FASE 6 AFGEROND**. Training 002-reus-wiki klaar (iter 18100, 61.907s): beste val 2.5597 (iter 14500) vs baseline 3.3441; eval ppl 28.10->14.97, cloze 0/32->5/32, rep-4 0.011->0.000. GGUF v2 Q4_K_M (342MB, logits-diff 7.6e-06) gebouwd op Vast, SHA256-verified naar K: en Pi, stay4s-reus ge-updatet (32.7 tok/s). ckpt_best downloadt nog naar K:. Pi-disk was 100% -> nu 502MB vrij (root-reserve 5->1%, apt/journal/pip-cache opgeruimd, v1-GGUF vervangen). WAARSCHUWING: usb4-schijf NIET gemount; /mnt/usb4 bevat 7.9GB shadow-data op de SD — dat is de echte oorzaak van de volle disk (OpenCode-lane, prioriteit). WhatsApp-stack draait buiten systemd (geen autostart na reboot).
