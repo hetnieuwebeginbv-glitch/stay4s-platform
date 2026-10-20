@@ -55,7 +55,9 @@ def estimate_loss(model, train, val, block, batch_size, device, gen, iters=50):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default=os.path.expanduser("~/stay4s-llm"))
-    ap.add_argument("--size", choices=list(SIZES), default="nano")
+    ap.add_argument("--arch", choices=["v1", "v2"], default="v1",
+                    help="v1 = model.py (GPT), v2 = model_v2.py (Titaan: RoPE/GQA/SwiGLU/MoE)")
+    ap.add_argument("--size", default="nano", help="v1: %s | v2: SIZES_V2 in model_v2.py" % list(SIZES))
     ap.add_argument("--block", type=int, default=256)
     ap.add_argument("--batch-size", type=int, default=32, help="per GPU")
     ap.add_argument("--grad-accum", type=int, default=2)
@@ -68,6 +70,10 @@ def main():
     ap.add_argument("--seed", type=int, default=1337)
     ap.add_argument("--out", default=None)
     ap.add_argument("--init-from", default=None, help="pad naar ckpt om vanaf te hervatten")
+    ap.add_argument("--opt8bit", action="store_true", help="bitsandbytes AdamW8bit (scheelt ~9GB bij 1.5B)")
+    ap.add_argument("--grad-ckpt", action="store_true", help="gradient checkpointing (xl op 24GB)")
+    ap.add_argument("--eval-batch", type=int, default=1)
+    ap.add_argument("--bf16", action="store_true", help="model in bf16 (halveert geheugen)")
     a = ap.parse_args()
 
     # --- DDP init ---
@@ -109,7 +115,16 @@ def main():
     vocab_size = Tokenizer.from_file(
         os.path.join(a.root, "data", "tokenizer", "tokenizer.json")
     ).get_vocab_size()
-    raw_model = build(vocab_size, a.size, a.dropout).to(device)
+    if a.arch == "v2":
+        from model_v2 import build_v2, SIZES_V2
+        assert a.size in SIZES_V2, f"onbekende v2-size {a.size!r}; kies uit {list(SIZES_V2)}"
+        raw_model = build_v2(vocab_size, a.size).to(device)
+    else:
+        assert a.size in SIZES, f"onbekende v1-size {a.size!r}; kies uit {list(SIZES)}"
+        raw_model = build(vocab_size, a.size, a.dropout).to(device)
+    raw_model.grad_ckpt = a.grad_ckpt
+    if a.bf16:
+        raw_model = raw_model.to(torch.bfloat16)
 
     start_iter = 0
     if a.init_from and os.path.exists(a.init_from):
@@ -118,17 +133,21 @@ def main():
         start_iter = ck.get("iter", 0)
         say(f"hervat vanaf {a.init_from} (iter {start_iter}, val {ck.get('val_loss')})")
 
-    model = DDP(raw_model, device_ids=[local_rank]) if ddp else raw_model
-    say(f"model={a.size} params={raw_model.num_params():,} block={a.block} "
+    model = DDP(raw_model, device_ids=[local_rank], gradient_as_bucket_view=True) if ddp else raw_model
+    _act = f" actief={raw_model.num_params_active():,}" if a.arch == "v2" else ""
+    say(f"model={a.arch}/{a.size} params={raw_model.num_params():,}{_act} block={a.block} "
         f"| effectieve batch={a.batch_size * world * a.grad_accum}")
 
     decay, no_decay = [], []
     for n, p in raw_model.named_parameters():
         (decay if p.dim() >= 2 else no_decay).append(p)
-    opt = torch.optim.AdamW(
-        [{"params": decay, "weight_decay": 0.1}, {"params": no_decay, "weight_decay": 0.0}],
-        lr=a.lr, betas=(0.9, 0.95),
-    )
+    groups = [{"params": decay, "weight_decay": 0.1}, {"params": no_decay, "weight_decay": 0.0}]
+    if a.opt8bit:
+        import bitsandbytes as bnb
+        opt = bnb.optim.PagedAdamW8bit(groups, lr=a.lr, betas=(0.9, 0.95))
+        say("optimizer: AdamW8bit (bitsandbytes)")
+    else:
+        opt = torch.optim.AdamW(groups, lr=a.lr, betas=(0.9, 0.95))
 
     t0 = time.time()
     best = float("inf")
@@ -149,7 +168,7 @@ def main():
         opt.step()
 
         if it % a.eval_interval == 0 or it == a.max_iters:
-            m = estimate_loss(raw_model, train, val, a.block, a.batch_size, device, gen)
+            m = estimate_loss(raw_model, train, val, a.block, a.eval_batch, device, gen)
             dt = time.time() - t0
             say(f"iter {it:5d} | lr {lr_at(it, a.warmup, a.max_iters, a.lr, a.min_lr):.2e} "
                 f"| train {m['train']:.4f} | val {m['val']:.4f} | {dt:6.1f}s")
