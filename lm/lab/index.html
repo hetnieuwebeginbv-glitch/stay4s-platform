@@ -55,6 +55,8 @@ Model: <b>stay4s-lm-003-xl</b> · 1.528.400.000 params · context 1024 · corpus
 
 <div class="panel"><h2>Leercurve (val-loss per evaluatie)</h2><canvas id="ch" height="220"></canvas><div class="gpu" id="gpu"></div></div>
 
+<div class="panel"><h2>Meer modellen in training</h2><div id="extra"><div class="smp"><div class="t" style="color:var(--dim)">Laden…</div></div></div></div>
+
 <div class="panel"><h2>Het model spreekt — samples per mijlpaal</h2><div class="samples" id="samples"><div class="smp"><div class="t" style="color:var(--dim)">Nog geen mijlpaal bereikt. Bij elke 1000 iteraties schrijft het model zelf een stukje.</div></div></div></div>
 
 <footer>Stay4S · from-scratch AI, eigen hardware · <span id="upd"></span></footer>
@@ -89,7 +91,26 @@ async function tick() {
       '<div class="smp"><div class="p">„'+x.prompt+'"</div><div class="t">'+x.text+'</div><div class="m">iter '+x.iter+' · val '+x.val+'</div></div>').join('');
   } catch(e) {}
 }
-tick(); setInterval(tick, 60000);
+async function tickExtra() {
+  try {
+    const r = await fetch('runs_extra.json?ts='+Date.now());
+    if (!r.ok) { extra.innerHTML = '<div class="smp"><div class="t" style="color:var(--dim)">Nog geen extra runs.</div></div>'; return; }
+    const d = await r.json();
+    extra.innerHTML = (d.runs||[]).map(x => {
+      const kleur = x.state==='training' ? 'var(--good)' : 'var(--bad)';
+      const it = x.iter!=null ? x.iter.toLocaleString('nl-NL')+' / '+x.max_iters.toLocaleString('nl-NL') : '-';
+      const val = x.val_now!=null ? x.val_now.toFixed(4) : '-';
+      const best = x.val_best!=null ? x.val_best.toFixed(4) : '-';
+      const snel = x.tok_s ? fmt(x.tok_s)+'/s' : '-';
+      const eta = x.eta_hours!=null ? x.eta_hours.toFixed(1)+' u' : '-';
+      const gpu = (x.gpu_util||[]).map((u,i)=>'GPU'+i+' '+u+'%').join(' · ');
+      return '<div class="smp"><div class="p"><span style="color:'+kleur+'">●</span> '+x.name+' <span style="color:var(--dim)">('+x.params+')</span></div>'+
+        '<div class="t">iter '+it+' · val '+val+' (best '+best+') · '+snel+' · ETA '+eta+'</div>'+
+        '<div class="m">'+x.state+' · '+gpu+'</div></div>';
+    }).join('');
+  } catch(e) {}
+}
+tick(); tickExtra(); setInterval(tick, 60000); setInterval(tickExtra, 60000);
 </script>
 </body>
 </html>
