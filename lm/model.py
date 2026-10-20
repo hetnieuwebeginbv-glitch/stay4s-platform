@@ -7,6 +7,7 @@ import math
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+from torch.utils.checkpoint import checkpoint as _grad_ckpt
 
 # Voorgedefinieerde formaten (params ≈ ruwe schatting)
 SIZES = {
@@ -18,6 +19,7 @@ SIZES = {
     "middel": (12, 12, 768, 512),
     "groot":  (16, 16, 1024, 1024),
     "reus":   (24, 16, 1280, 1024),
+    "xl":     (48, 25, 1600, 1024),
 }
 
 
@@ -40,11 +42,18 @@ class CausalSelfAttention(nn.Module):
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
         q = q.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
         v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
-        att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
-        att = att.masked_fill(self.bias[:, :, :T, :T] == 0, float("-inf"))
-        att = F.softmax(att, dim=-1)
-        att = self.attn_dropout(att)
-        y = (att @ v).transpose(1, 2).contiguous().view(B, T, C)
+        if hasattr(F, "scaled_dot_product_attention"):
+            y = F.scaled_dot_product_attention(
+                q, k, v, attn_mask=None,
+                dropout_p=self.attn_dropout.p if self.training else 0.0,
+                is_causal=True)
+        else:
+            att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
+            att = att.masked_fill(self.bias[:, :, :T, :T] == 0, float("-inf"))
+            att = F.softmax(att, dim=-1)
+            att = self.attn_dropout(att)
+            y = att @ v
+        y = y.transpose(1, 2).contiguous().view(B, T, C)
         return self.resid_dropout(self.c_proj(y))
 
 
@@ -77,6 +86,7 @@ class GPT(nn.Module):
     def __init__(self, vocab_size, block_size, n_layer, n_head, n_embd, dropout=0.0):
         super().__init__()
         self.block_size = block_size
+        self.grad_ckpt = False
         self.transformer = nn.ModuleDict(dict(
             wte=nn.Embedding(vocab_size, n_embd),
             wpe=nn.Embedding(block_size, n_embd),
@@ -108,7 +118,10 @@ class GPT(nn.Module):
         pos = torch.arange(0, T, device=idx.device)
         x = self.transformer.drop(self.transformer.wte(idx) + self.transformer.wpe(pos))
         for blk in self.transformer.h:
-            x = blk(x)
+            if self.grad_ckpt and self.training:
+                x = _grad_ckpt(blk, x, use_reentrant=False)
+            else:
+                x = blk(x)
         x = self.transformer.ln_f(x)
         if targets is not None:
             logits = self.lm_head(x)
